@@ -34,7 +34,7 @@ EOT
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $options = array(
-            'name' => 'Keolis Test Server',
+            'name' => 'Octower Server',
             'type' => 'server'
         );
 
