@@ -41,7 +41,7 @@ abstract class Command extends BaseCommand
             $application = $this->getApplication();
             if ($application instanceof Application) {
                 /* @var $application    Application */
-                $this->composer = $application->getOctower($required);
+                $this->octower = $application->getOctower($required);
             } elseif ($required) {
                 throw new \RuntimeException(
                     'Could not create a Octower\Octower instance, you must inject ' .

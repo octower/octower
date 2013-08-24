@@ -176,7 +176,17 @@ class Application extends BaseApplication
     protected function getDefaultCommands()
     {
         $commands = parent::getDefaultCommands();
+
         $commands[] = new Command\AboutCommand();
+
+        $commands[] = new Command\PackageCommand();
+        $commands[] = new Command\DeployCommand();
+        $commands[] = new Command\TestCommand();
+
+        $commands[] = new Command\Server\InitializeCommand();
+        $commands[] = new Command\Server\InfoCommand();
+        $commands[] = new Command\Server\PackageGetStoreCommand();
+        $commands[] = new Command\Server\PackageExtractCommand();
 
         return $commands;
     }

@@ -164,4 +164,10 @@ interface IOInterface
      * @param Config $config
      */
     public function loadConfiguration(Config $config);
+
+    public function progressStart($max, $redrawFrequency = null);
+
+    public function progressAdvance($step = 1);
+
+    public function progressFinnish();
 }

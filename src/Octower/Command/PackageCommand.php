@@ -11,32 +11,30 @@
 
 namespace Octower\Command;
 
-
 use Octower\Octower;
+use Octower\Packager;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class AboutCommand extends Command
+class PackageCommand extends Command
 {
     protected function configure()
     {
         $this
-            ->setName('about')
-            ->setDescription('Short information about Octower')
+            ->setName('package:generate')
+            ->setDescription('Create package to deploy')
             ->setHelp(<<<EOT
-<info>php octower.phar about</info>
+<info>php octower.phar package:generate</info>
 EOT
             );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $version = Octower::VERSION;
-        $output->writeln(<<<EOT
-<info>Octower <comment>{$version}</comment> - PHP Deployment manager</info>
-<comment>Octower is an octopus.</comment>
-EOT
-        );
+        $octower = $this->getOctower();
+        $io = $this->getIO();
 
+        $packager = Packager::create($io, $octower);
+        $packager->run();
     }
 }

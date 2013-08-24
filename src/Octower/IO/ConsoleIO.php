@@ -11,6 +11,7 @@
 
 namespace Octower\IO;
 
+use Symfony\Component\Console\Helper\ProgressHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Helper\HelperSet;
@@ -35,8 +36,8 @@ class ConsoleIO extends BaseIO
      */
     public function __construct(InputInterface $input, OutputInterface $output, HelperSet $helperSet)
     {
-        $this->input = $input;
-        $this->output = $output;
+        $this->input     = $input;
+        $this->output    = $output;
         $this->helperSet = $helperSet;
     }
 
@@ -91,7 +92,7 @@ class ConsoleIO extends BaseIO
     public function write($messages, $newline = true)
     {
         if (null !== $this->startTime) {
-            $messages = (array) $messages;
+            $messages    = (array)$messages;
             $messages[0] = sprintf(
                 '[%.1fMB/%.2fs] %s',
                 memory_get_usage() / 1024 / 1024,
@@ -100,7 +101,7 @@ class ConsoleIO extends BaseIO
             );
         }
         $this->output->write($messages, $newline);
-        $this->lastMessage = join($newline ? "\n" : '', (array) $messages);
+        $this->lastMessage = join($newline ? "\n" : '', (array)$messages);
     }
 
     /**
@@ -109,7 +110,7 @@ class ConsoleIO extends BaseIO
     public function overwrite($messages, $newline = true, $size = null)
     {
         // messages can be an array, let's convert it to string anyway
-        $messages = join($newline ? "\n" : '', (array) $messages);
+        $messages = join($newline ? "\n" : '', (array)$messages);
 
         // since overwrite is supposed to overwrite last message...
         if (!isset($size)) {
@@ -167,15 +168,15 @@ class ConsoleIO extends BaseIO
     {
         // handle windows
         if (defined('PHP_WINDOWS_VERSION_BUILD')) {
-            $exe = __DIR__.'\\hiddeninput.exe';
+            $exe = __DIR__ . '\\hiddeninput.exe';
 
             // handle code running from a phar
             if ('phar:' === substr(__FILE__, 0, 5)) {
-                $tmpExe = sys_get_temp_dir().'/hiddeninput.exe';
+                $tmpExe = sys_get_temp_dir() . '/hiddeninput.exe';
 
                 // use stream_copy_to_stream instead of copy
                 // to work around https://bugs.php.net/bug.php?id=64634
-                $source = fopen(__DIR__.'\\hiddeninput.exe', 'r');
+                $source = fopen(__DIR__ . '\\hiddeninput.exe', 'r');
                 $target = fopen($tmpExe, 'w+');
                 stream_copy_to_stream($source, $target);
                 fclose($source);
@@ -210,7 +211,7 @@ class ConsoleIO extends BaseIO
                 $this->write($question, false);
                 $readCmd = ($shell === 'csh') ? 'set mypassword = $<' : 'read -r mypassword';
                 $command = sprintf("/usr/bin/env %s -c 'stty -echo; %s; stty echo; echo \$mypassword'", $shell, $readCmd);
-                $value = rtrim(shell_exec($command));
+                $value   = rtrim(shell_exec($command));
                 $this->write('');
 
                 return $value;
@@ -219,5 +220,35 @@ class ConsoleIO extends BaseIO
 
         // not able to hide the answer, proceed with normal question handling
         return $this->ask($question);
+    }
+
+    public function progressStart($max, $redrawFrequency = null)
+    {
+        /** @var ProgressHelper $progress */
+        $progress = $this->getProgressHelper();
+
+        $progress->start($this->output, $max);
+
+        if (null !== $redrawFrequency) {
+            $progress->setRedrawFrequency($redrawFrequency);
+        }
+    }
+
+    public function progressAdvance($step = 1)
+    {
+        $this->getProgressHelper()->advance($step);
+    }
+
+    public function progressFinnish()
+    {
+        $this->getProgressHelper()->finish();
+    }
+
+    /**
+     * @return ProgressHelper
+     */
+    protected function getProgressHelper()
+    {
+        return $this->helperSet->get('progress');
     }
 }

@@ -18,6 +18,7 @@ class Config
     public static $defaultConfig = array(
         'process-timeout' => 300,
         'use-composer'    => true,
+        'vendor-dir'      => null,
     );
 
     private $config;

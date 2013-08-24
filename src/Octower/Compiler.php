@@ -43,7 +43,7 @@ class Compiler
         }
         $this->version = trim($process->getOutput());
 
-        $process = new Process('git describe --tags HEAD');
+        $process = new Process('git describe --tags HEAD', __DIR__);
         if ($process->run() == 0) {
             $this->version = trim($process->getOutput());
         }
@@ -52,6 +52,8 @@ class Compiler
         $phar->setSignatureAlgorithm(\Phar::SHA1);
 
         $phar->startBuffering();
+
+
 
         $finder = new Finder();
         $finder->files()

@@ -102,4 +102,21 @@ class NullIO extends BaseIO
     {
         return null;
     }
+
+    public function progressStart($max, $redrawFrequency = null)
+    {
+
+    }
+
+    public function progressAdvance($step = 1)
+    {
+
+    }
+
+    public function progressFinnish()
+    {
+
+    }
+
+
 }

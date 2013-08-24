@@ -11,6 +11,8 @@
 
 namespace Octower;
 
+use Octower\Metadata\Context;
+
 /**
  * Class Octower
  *
@@ -26,11 +28,20 @@ class Octower
     private $config;
 
     /**
+     * @var Context
+     */
+    private $context;
+
+    /**
      * @param Config $config
+     *
+     * @return $this
      */
     public function setConfig(Config $config)
     {
         $this->config = $config;
+
+        return $this;
     }
 
     /**
@@ -41,4 +52,23 @@ class Octower
         return $this->config;
     }
 
+    /**
+     * @param \Octower\Metadata\Context $context
+     *
+     * @return $this
+     */
+    public function setContext($context)
+    {
+        $this->context = $context;
+
+        return $this;
+    }
+
+    /**
+     * @return \Octower\Metadata\Context
+     */
+    public function getContext()
+    {
+        return $this->context;
+    }
 }

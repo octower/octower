@@ -1,0 +1,53 @@
+{
+    "name": "Package",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "name": {
+            "type": "string",
+            "description": "Item name.",
+            "required": true
+        },
+        "type": {
+            "type": {
+                "enum": [ "project", "server" ]
+            },
+            "description": "Type",
+            "required": true
+        },
+        "description": {
+            "type": "string",
+            "description": "Item description."
+        },
+        "shared": {
+            "type": "array",
+            "description": "",
+            "items": {
+                "type": "string",
+                "description": ""
+            }
+        },
+        "excluded": {
+            "type": "array",
+            "description": "",
+            "items": {
+                "type": "string",
+                "description": ""
+            }
+        },
+        "config": {
+            "type": "object",
+            "description": "Octower options.",
+            "properties": {
+                "process-timeout": {
+                    "type": "integer",
+                    "description": "The timeout in seconds for process executions, defaults to 300 (5mins)."
+                },
+                "vendor-dir": {
+                    "type": "string",
+                    "description": "The location where all external librairies are installed."
+                }
+            }
+        }
+    }
+}

@@ -14,6 +14,7 @@ namespace Octower;
 use Octower\Config\JsonConfigSource;
 use Octower\IO\IOInterface;
 use Octower\Json\JsonFile;
+use Octower\Util\ProcessExecutor;
 use Octower\Util\RemoteFilesystem;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 
@@ -68,7 +69,6 @@ class Factory
         }
 
         if (is_string($localConfig)) {
-            $composerFile = $localConfig;
             $file = new JsonFile($localConfig, new RemoteFilesystem($io));
 
             if (!$file->exists()) {
@@ -90,7 +90,21 @@ class Factory
         $config->merge($localConfig);
         $io->loadConfiguration($config);
 
-        return null;
+        // setup process timeout
+        ProcessExecutor::setTimeout((int) $config->get('process-timeout'));
+
+        // Load package metadata
+        $loader  = new Metadata\Loader\RootLoader($config, new ProcessExecutor($io));
+        $context = $loader->load($localConfig);
+
+
+        // initialize octower
+        $octower = new Octower();
+        $octower
+            ->setConfig($config)
+            ->setContext($context);
+
+        return $octower;
     }
 
     public static function createAdditionalStyles()
