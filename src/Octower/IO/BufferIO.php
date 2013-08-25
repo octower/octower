@@ -143,7 +143,7 @@ class BufferIO extends BaseIO
      */
     public function getStandardOutput()
     {
-        return $this->standardOutput;
+        return trim($this->standardOutput, "\r\n");
     }
 
 
