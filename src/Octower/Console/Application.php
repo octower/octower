@@ -168,6 +168,20 @@ class Application extends BaseApplication
         return $this->io;
     }
 
+    /**
+     * @param \Octower\IO\IOInterface $io
+     *
+     * @return Application
+     */
+    public function setIo(IOInterface $io)
+    {
+        $this->io = $io;
+        // Rebuild octower with new IO
+        $this->octower = Factory::create($this->io);
+
+        return $this;
+    }
+
     public function getHelp()
     {
         return self::$logo . parent::getHelp();
@@ -187,6 +201,7 @@ class Application extends BaseApplication
         $commands[] = new Command\Server\InfoCommand();
         $commands[] = new Command\Server\PackageGetStoreCommand();
         $commands[] = new Command\Server\PackageExtractCommand();
+        $commands[] = new Command\Server\ReleaseListCommand();
 
         return $commands;
     }

@@ -11,6 +11,7 @@
 
 namespace Octower\Command;
 
+use Octower\Deployer;
 use Octower\Metadata\Project;
 use Octower\Octower;
 use Octower\Packager;
@@ -66,7 +67,9 @@ EOT
 
         // Contact the server
         $remote = $project->getRemote($input->getArgument('remote'));
-        $remote->sendPackage($io, $project, $packagePath);
+        $deployer = Deployer::create($this->getIO(), $this->getOctower());
+        $deployer->run($remote);
+        //$remote->sendPackage($io, $project, $packagePath);
 
 
         if ($input->getOption('generate')) {

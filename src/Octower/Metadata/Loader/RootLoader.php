@@ -15,7 +15,8 @@ use Octower\Config;
 use Octower\Metadata\Context;
 use Octower\Metadata\Project;
 use Octower\Metadata\Server;
-use Octower\Remote\SshServer;
+use Octower\Remote\LocalRemote;
+use Octower\Remote\SshRemote;
 use Octower\Util\ProcessExecutor;
 
 class RootLoader
@@ -78,7 +79,10 @@ class RootLoader
                 $remote = null;
                 switch ($remoteConfig['type']) {
                     case 'ssh':
-                        $remote = new SshServer($remoteConfig['config'], $this->process);
+                        $remote = new SshRemote($remoteConfig['config'], $this->process);
+                        break;
+                    case 'local':
+                        $remote = new LocalRemote($remoteConfig['config'], $this->process);
                         break;
                 }
 

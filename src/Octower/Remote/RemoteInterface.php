@@ -14,7 +14,7 @@ namespace Octower\Remote;
 use Octower\IO\IOInterface;
 use Octower\Metadata\Project;
 
-interface ServerInterface {
+interface RemoteInterface {
 
     public function sendPackage(IOInterface $io, Project $project, $package);
 }

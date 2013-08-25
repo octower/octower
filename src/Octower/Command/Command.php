@@ -54,9 +54,9 @@ abstract class Command extends BaseCommand
     }
 
     /**
-     * @param Octower $composer
+     * @param Octower $octower
      */
-    public function setComposer(Octower $octower)
+    public function setOctower(Octower $octower)
     {
         $this->octower = $octower;
     }

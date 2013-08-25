@@ -11,7 +11,6 @@
 
 namespace Octower\Command\Server;
 
-use Octower\Command\Command;
 use Octower\Json\JsonFile;
 use Octower\Metadata\Server;
 use Octower\Packager;
@@ -20,7 +19,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
-class PackageExtractCommand extends Command
+class PackageExtractCommand extends ServerCommand
 {
     protected function configure()
     {
@@ -34,33 +33,15 @@ EOT
             ->addArgument('package', InputArgument::REQUIRED);
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function doExecute(InputInterface $input)
     {
-        $octower    = $this->getOctower();
-        $io         = $this->getIO();
-        $filesystem = new Filesystem();
-
-        if (!$octower->getContext() instanceof Server) {
-            throw new \RuntimeException('The current context is not a server context.');
-        }
+        $this->checkServerContext();
 
         $package = $input->getArgument('package');
 
-        $phar     = new \PharData($package, 0);
-        $metadata = $phar->getMetadata();
+        $octower = $this->getOctower();
+        $io = $this->getIO();
 
-        $releaseTarget = sprintf('releases/%s/', $metadata['version'], date('Ymd-His'));
-
-        if ($filesystem->exists($releaseTarget)) {
-            throw new \Exception('Release allready exist on the server');
-        }
-
-        $filesystem->mkdir($releaseTarget);
-
-        try {
-            $phar->extractTo($releaseTarget);
-        } catch (\Exception $ex) {
-            throw $ex;
-        }
+        Packager::extract($package);
     }
 }

@@ -17,7 +17,7 @@ use Octower\Metadata\Project;
 use Octower\Util\ProcessExecutor;
 use Symfony\Component\Filesystem\Filesystem;
 
-class LocalServer implements ServerInterface
+class LocalRemote implements RemoteInterface
 {
     private $path;
 
@@ -32,15 +32,17 @@ class LocalServer implements ServerInterface
     private $filesystem;
 
 
-    public function __construct($path,ProcessExecutor $process = null)
+    public function __construct($config,ProcessExecutor $process = null)
     {
-        $this->path    = $path;
+        $this->path    = $config['path'];
         $this->process = $process ? : new ProcessExecutor();
         $this->filesystem = new Filesystem();
     }
 
     public function sendPackage(IOInterface $io, Project $project, $package)
     {
+        $io->write(sprintf('<info>Local server path:</info> %s', $this->path));
+
         if ($this->process->execute('php octower.phar server:info', $output, $this->path) != 0) {
             throw new \RuntimeException('It seems that the remote is not a valid octower server');
         }
@@ -50,6 +52,8 @@ class LocalServer implements ServerInterface
         }
 
         $dest = trim($output);
+
+        $io->write(sprintf('<info>Remote file destination:</info> %s', $dest));
         $this->filesystem->copy($package, $dest);
 
         $io->write('<info>Extracting package on server...</info>', false);

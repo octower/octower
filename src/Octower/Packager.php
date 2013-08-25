@@ -13,8 +13,10 @@ namespace Octower;
 
 
 use Octower\IO\IOInterface;
+use Octower\Json\JsonFile;
 use Octower\Metadata\Project;
 use Octower\Util\ProcessExecutor;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\Process\Process;
@@ -34,6 +36,11 @@ class Packager
     protected $config;
 
     /**
+     * @var Filesystem
+     */
+    protected $filesystem;
+
+    /**
      * @var Project
      */
     protected $project;
@@ -44,10 +51,41 @@ class Packager
 
     public function __construct(IOInterface $io, Config $config, Project $project, ProcessExecutor $process = null)
     {
-        $this->io      = $io;
-        $this->config  = $config;
-        $this->project = $project;
-        $this->process = $process ? : new ProcessExecutor();
+        $this->io         = $io;
+        $this->config     = $config;
+        $this->project    = $project;
+        $this->process    = $process ? : new ProcessExecutor();
+        $this->filesystem = new Filesystem();
+    }
+
+
+    public static function extract($package)
+    {
+        $filesystem = new Filesystem();
+
+        /** @var \Phar $phar */
+        $archive = new \ZipArchive();
+        $archive->open($package);
+
+        $metadata = JsonFile::parseJson($archive->getArchiveComment());
+
+        if(!$metadata || !isset($metadata['version'])) {
+            throw new \Exception('Invalid package metadata');
+        }
+
+        $releaseTarget = sprintf('releases/%s/', $metadata['version']);
+
+        if ($filesystem->exists($releaseTarget)) {
+            throw new \Exception('Release allready exist on the server');
+        }
+
+        $filesystem->mkdir($releaseTarget);
+
+        try {
+            $archive->extractTo($releaseTarget);
+        } catch (\Exception $ex) {
+            throw $ex;
+        }
     }
 
     /**
@@ -56,11 +94,13 @@ class Packager
      * @param  IOInterface $io
      * @param  Octower     $octower
      *
+     * @throws \RuntimeException
+     *
      * @return Packager
      */
     public static function create(IOInterface $io, Octower $octower)
     {
-        if(!$octower->getContext() instanceof Project) {
+        if (!$octower->getContext() instanceof Project) {
             throw new \RuntimeException('Packager should be used in a project context only.');
         }
 
@@ -79,14 +119,14 @@ class Packager
      */
     public function run($buildDir = null, $packageName = null)
     {
-        if($buildDir == null) {
+        if ($buildDir == null) {
             $buildDir = getcwd();
         }
 
         $this->io->write(sprintf('<info>Project: <comment>%s</comment></info>', $this->project->getName()));
         $this->io->write(sprintf('<info>Version: <comment>%s</comment></info>', $this->project->getVersion()));
 
-        if($packageName == null) {
+        if ($packageName == null) {
             $packageName = sprintf('%s-%s', $this->project->getNormalizedName(), $this->project->getVersion());
         }
 
@@ -100,14 +140,8 @@ class Packager
             unlink($buildDir . DIRECTORY_SEPARATOR . $packageName);
         }
 
-
-
-        $phar = new \PharData($buildDir . DIRECTORY_SEPARATOR . $packageName, 0, 'package.phar');
-        $phar->setMetadata(array(
-            'version' => $this->project->getVersion(),
-            'packagedAt' => new \DateTime('now'),
-            'author' => $this->getAuthor(),
-        ));
+        $archive = new \ZipArchive();
+        $archive->open($buildDir . DIRECTORY_SEPARATOR . $packageName, \ZipArchive::CREATE);
 
         if (null !== $this->config->get('vendor-dir')) {
             // Add vendor
@@ -117,16 +151,22 @@ class Packager
         }
 
         // Add project files
-        $this->detectProjectFiles($phar);
+        $this->detectProjectFiles($archive);
 
         // Build Phar
         $this->io->write('<info>Build Package...</info>', false);
+        foreach($this->files as $name => $file) {
+            $archive->addFile($file, $name);
+        }
+        //$phar->buildFromIterator(new \ArrayIterator($this->files));
+        $this->io->overwrite('<info>Build Package... <comment>Done</comment></info>');
 
-        $phar->buildFromIterator(new \ArrayIterator($this->files));
+        // Add Manifest
+        $this->io->write('<info>Add Manifest...</info>', false);
+        $this->addManifest($archive);
+        $this->io->overwrite('<info>Add Manifest... <comment>Done</comment></info>');
 
-        $this->io->write('<info>Build Package... <comment>Done</comment></info>');
-
-        unset($phar);
+        $archive->close();
 
         return $buildDir . DIRECTORY_SEPARATOR . $packageName;
     }
@@ -142,6 +182,9 @@ class Packager
             ->files()
             ->ignoreVCS(true)
             ->ignoreDotFiles(false)
+            ->notName('.DS_Store')
+            ->notName('*.octopack')
+            ->notName('*.*~')
             ->in(getcwd() . DIRECTORY_SEPARATOR . $vendorPath);
 
         $i     = 0;
@@ -159,23 +202,21 @@ class Packager
                 continue;
             }
 
-            if (strlen($vendorPath . DIRECTORY_SEPARATOR . $file->getRelativePathname()) == 0 || strlen((string)$file) == 0) {
-                var_dump('---------', $vendorPath . DIRECTORY_SEPARATOR . $file->getRelativePathname(), (string)$file, '=======');
-            }
-
             $this->files[$vendorPath . DIRECTORY_SEPARATOR . $file->getRelativePathname()] = (string)$file;
         }
 
         $this->io->overwrite('<info>Adding vendors files... <comment>Done</comment></info>', true);
     }
 
-    protected function detectProjectFiles(\PharData $phar)
+    protected function detectProjectFiles(\ZipArchive $archive)
     {
         $finder = new Finder();
         $finder
             ->files()
             ->ignoreVCS(true)
             ->ignoreDotFiles(false)
+            ->notName('.DS_Store')
+            ->notName('*.octopack')
             ->notName('*.*~')
             ->in(getcwd());
 
@@ -213,7 +254,7 @@ class Packager
 
             if (strpos($content, '@package_version@') !== false) {
                 $content = str_replace('@package_version@', $this->project->getVersion(), $content);
-                $phar->addFromString($file->getRelativePathname(), $content);
+                $archive->addFromString($file->getRelativePathname(), $content);
             } else {
                 $this->files[$file->getRelativePathname()] = (string)$file;
             }
@@ -222,18 +263,34 @@ class Packager
         $this->io->overwrite('<info>Adding project files... <comment>Done</comment></info>', true);
     }
 
+    protected function addManifest(\ZipArchive $archive)
+    {
+        $file = new JsonFile('.octower.manifest');
+        $author = $this->getAuthor();
+
+        $manifest = array(
+            'version'    => $this->project->getVersion(),
+            'packagedAt' => date_create('now')->format(\DateTime::ISO8601),
+            'author'     => sprintf('%s <%s>', $author['name'], $author['email'])
+        );
+
+        $archive->setArchiveComment($file->encode($manifest));
+        $archive->addFromString('.octower.manifest', $file->encode($manifest));
+    }
+
+
     protected function getAuthor()
     {
         $author = array(
-            'name' => '',
+            'name'  => '',
             'email' => ''
         );
 
-        if($this->process->execute('git config user.name', $output) == 0) {
+        if ($this->process->execute('git config user.name', $output) == 0) {
             $author['name'] = trim($output);
         }
 
-        if($this->process->execute('git config user.email', $output) == 0) {
+        if ($this->process->execute('git config user.email', $output) == 0) {
             $author['email'] = trim($output);
         }
 

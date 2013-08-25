@@ -11,14 +11,14 @@
 
 namespace Octower\Command\Server;
 
-use Octower\Command\Command;
+use Octower\IO\IOInterface;
 use Octower\Json\JsonFile;
 use Octower\Metadata\Server;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class InfoCommand extends Command
+class InfoCommand extends ServerCommand
 {
     protected function configure()
     {
@@ -31,7 +31,7 @@ EOT
             );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function doExecute(InputInterface $input)
     {
         $octower = $this->getOctower();
         $io      = $this->getIO();

@@ -19,7 +19,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class PackageGetStoreCommand extends Command
+class PackageGetStoreCommand extends ServerCommand
 {
     protected function configure()
     {
@@ -34,7 +34,7 @@ EOT
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function doExecute(InputInterface $input)
     {
         $octower = $this->getOctower();
         $io      = $this->getIO();
