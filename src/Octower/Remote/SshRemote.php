@@ -13,10 +13,12 @@ namespace Octower\Remote;
 
 
 use Octower\IO\IOInterface;
+use Octower\Json\JsonFile;
+use Octower\Metadata\Project;
 use Octower\Util\ProcessExecutor;
 use Octower\Ssh as Ssh;
 
-class SshRemote
+class SshRemote implements RemoteInterface
 {
     private $config;
 
@@ -57,25 +59,48 @@ class SshRemote
         }
 
         $output = $this->execSshInPath('php octower.phar server:info --automation --no-ansi');
+        $outputJson = JsonFile::parseJson($output);
+        if($outputJson['statusCode'] != 0) {
+            throw new \RuntimeException('It seems that the remote is not a valid & working octower server');
+        }
 
-        var_dump($output);
+        return true;
+    }
+
+    public function getUploadDestinationFile(IOInterface $io, Project $project)
+    {
+        $output = $this->execSshInPath(sprintf('php octower.phar server:package:get-store %s --automation --no-ansi', $project->getNormalizedName()));
+
+        $outputJson = JsonFile::parseJson($output);
+        $dest = $outputJson['output'];
+        $io->write('Temporary package file on the server: ' . $dest);
+
+        return $dest;
     }
 
     public function sendPackage(IOInterface $io, $source, $dest)
     {
         $this->connect($io);
 
-
-        $dest = $this->execSshInPath(sprintf('php octower.phar server:package:get-store %s', $project->getNormalizedName()));
-        $io->write('Temporary package file on the server: ' . $dest);
-
         $this->transfert($io, $dest, $source);
 
         $io->write('<info>Extracting package on server...</info>', false);
 
-        $this->execSshInPath(sprintf('php octower.phar server:package:extract %s', $dest));
+        $this->execSshInPath(sprintf('php octower.phar server:package:extract %s --automation --no-ansi', $dest));
 
         $io->overwrite('<info>Extracting package on server... <comment>Success</comment></info>', true);
+    }
+
+    public function execServerCommand($cmd)
+    {
+        $output = $this->execSshInPath(sprintf('php octower.phar %s --automation --no-ansi', $cmd));
+        $outputJson = JsonFile::parseJson($output);
+
+        if($outputJson['statusCode'] != 0) {
+            throw new \RuntimeException($outputJson['exception']);
+        }
+
+        return $outputJson['output'];
     }
 
     protected function connect(IOInterface $io)
@@ -151,7 +176,7 @@ class SshRemote
         $io->write('<info>Upload package on server... <comment>0%</comment></info>', false);
 
         // open the remote file
-        if (($remoteFp = @fopen(sprintf('ssh2.sftp://%s%s', $this->sftp, $dest), 'w')) === false) {
+        if (($remoteFp = @fopen($this->sshSession->getSftp()->getUrl($dest), 'w')) === false) {
             throw new \Exception(sprintf('Could not open remote file: %s', $dest));
         }
 

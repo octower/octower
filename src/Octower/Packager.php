@@ -220,7 +220,7 @@ class Packager
             ->notName('*.*~')
             ->in(getcwd());
 
-        foreach ($this->project->getShared() as $path) {
+        foreach ($this->project->getShared() as $path => $sharedObject) {
             if (is_dir($path)) {
                 $finder->notPath($path);
             } else {

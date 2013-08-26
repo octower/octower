@@ -70,7 +70,7 @@ class Factory
 
         if (is_string($localConfig)) {
             $file = new JsonFile($localConfig, new RemoteFilesystem($io));
-
+            $rootPath = basename($localConfig);
             if (!$file->exists()) {
                 if ($localConfig === './octower.json' || $localConfig === 'octower.json') {
                     $message = 'Composer could not find a octower.json file in '.getcwd();
@@ -83,6 +83,7 @@ class Factory
 
             $file->validateSchema(JsonFile::LAX_SCHEMA);
             $localConfig = $file->read();
+            $localConfig['root_path'] = $rootPath;
         }
 
         // Configuration defaults

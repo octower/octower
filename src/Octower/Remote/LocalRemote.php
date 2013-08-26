@@ -39,7 +39,7 @@ class LocalRemote implements RemoteInterface
         $this->filesystem = new Filesystem();
     }
 
-    public function sendPackage(IOInterface $io, Project $project, $package)
+    public function isServerValid(IOInterface $io)
     {
         $io->write(sprintf('<info>Local server path:</info> %s', $this->path));
 
@@ -47,14 +47,22 @@ class LocalRemote implements RemoteInterface
             throw new \RuntimeException('It seems that the remote is not a valid octower server');
         }
 
+        return true;
+    }
+
+    public function getUploadDestinationFile(IOInterface $io, Project $project)
+    {
         if ($this->process->execute(sprintf('php octower.phar server:package:get-store %s', $project->getNormalizedName()), $output, $this->path) != 0) {
             throw new \Exception('An error occured : ' . PHP_EOL . $output);
         }
 
-        $dest = trim($output);
+        return trim($output);
+    }
 
+    public function sendPackage(IOInterface $io, $source, $dest)
+    {
         $io->write(sprintf('<info>Remote file destination:</info> %s', $dest));
-        $this->filesystem->copy($package, $dest);
+        $this->filesystem->copy($source, $dest);
 
         $io->write('<info>Extracting package on server...</info>', false);
 
@@ -64,4 +72,15 @@ class LocalRemote implements RemoteInterface
 
         $io->overwrite('<info>Extracting package on server...<comment>Success</comment></info>', true);
     }
+
+    public function execServerCommand($cmd)
+    {
+        if ($this->process->execute(sprintf('php octower.phar %s', $cmd), $output, $this->path) != 0) {
+            throw new \Exception('An error occured  : ' . PHP_EOL . $this->process->getErrorOutput());
+        }
+
+        return trim($output);
+    }
+
+
 }

@@ -20,12 +20,9 @@
             "description": "Item description."
         },
         "shared": {
-            "type": "array",
+            "type": "object",
             "description": "",
-            "items": {
-                "type": "string",
-                "description": ""
-            }
+            "additionalProperties": true
         },
         "excluded": {
             "type": "array",

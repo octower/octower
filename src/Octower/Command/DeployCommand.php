@@ -13,9 +13,7 @@ namespace Octower\Command;
 
 use Octower\Deployer;
 use Octower\Metadata\Project;
-use Octower\Octower;
 use Octower\Packager;
-use Octower\Remote\LocalServer;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -44,7 +42,7 @@ EOT
         $io      = $this->getIO();
 
         if (!$octower->getContext() instanceof Project) {
-            throw new \RuntimeException('The current context is not a server context.');
+            throw new \RuntimeException('The current context is not a project context.');
         }
 
         /** @var Project $project */
@@ -68,8 +66,7 @@ EOT
         // Contact the server
         $remote = $project->getRemote($input->getArgument('remote'));
         $deployer = Deployer::create($this->getIO(), $this->getOctower());
-        $deployer->run($remote);
-        //$remote->sendPackage($io, $project, $packagePath);
+        $deployer->deploy($remote, $packagePath);
 
 
         if ($input->getOption('generate')) {

@@ -10,7 +10,7 @@
 
 namespace Octower\Metadata;
 
-use Octower\Remote\ServerInterface;
+use Octower\Remote\RemoteInterface;
 
 class Project extends Context
 {
@@ -90,9 +90,10 @@ class Project extends Context
     }
 
     /**
-     * @param mixed $remote
+     * @param $name
+     * @param $remote
      *
-     * @return Project
+     * @return $this
      */
     public function addRemotes($name, $remote)
     {
@@ -104,10 +105,15 @@ class Project extends Context
     /**
      * @param $name
      *
-     * @return ServerInterface
+     * @return RemoteInterface
+     * @throws \Exception
      */
     public function getRemote($name)
     {
+        if (!isset($this->remotes[$name])) {
+            throw new \Exception(sprintf('Remote "%s" not found.', $name));
+        }
+
         return $this->remotes[$name];
     }
 

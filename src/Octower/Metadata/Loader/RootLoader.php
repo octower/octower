@@ -12,6 +12,7 @@
 namespace Octower\Metadata\Loader;
 
 use Octower\Config;
+use Octower\Json\JsonFile;
 use Octower\Metadata\Context;
 use Octower\Metadata\Project;
 use Octower\Metadata\Server;
@@ -92,14 +93,21 @@ class RootLoader
             }
         }
 
-        if ($this->process->execute('git log --pretty="%H" -n1 HEAD', $output) != 0) {
-            throw new \RuntimeException('Can\'t run git log. You must ensure to run compile from octower git repository clone and that git binary is available.');
-        }
+        if (file_exists(getcwd() . DIRECTORY_SEPARATOR . '.git') && is_dir(getcwd() . DIRECTORY_SEPARATOR . '.git')) {
+            if ($this->process->execute('git log --pretty="%H" -n1 HEAD', $output) != 0) {
+                throw new \RuntimeException('Can\'t run git log. You must ensure to run compile from octower git repository clone and that git binary is available.');
+            }
 
-        $project->setVersion(trim($output));
-
-        if ($this->process->execute('git describe --tags HEAD', $output) == 0) {
             $project->setVersion(trim($output));
+
+            if ($this->process->execute('git describe --tags HEAD', $output) == 0) {
+                $project->setVersion(trim($output));
+            }
+        }
+        elseif(file_exists($config['root_path'] . DIRECTORY_SEPARATOR . '.octower.manifest')) {
+            $manifestFile = new JsonFile($config['root_path'] . DIRECTORY_SEPARATOR . '.octower.manifest');
+            $json = $manifestFile->read();
+            $project->setVersion($json['version']);
         }
 
         return $project;

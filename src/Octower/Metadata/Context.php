@@ -15,6 +15,8 @@ abstract class Context
 {
     protected $name;
 
+    protected $rootPath;
+
     /**
      * All descendants' constructors should call this parent constructor
      *
@@ -35,6 +37,26 @@ abstract class Context
     public function getNormalizedName()
     {
         return static::underscore($this->name);
+    }
+
+    /**
+     * @param mixed $rootPath
+     *
+     * @return Context
+     */
+    public function setRootPath($rootPath)
+    {
+        $this->rootPath = $rootPath;
+
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getRootPath()
+    {
+        return $this->rootPath;
     }
 
     /**

@@ -16,5 +16,11 @@ use Octower\Metadata\Project;
 
 interface RemoteInterface {
 
-    public function sendPackage(IOInterface $io, Project $project, $package);
+    public function isServerValid(IOInterface $io);
+
+    public function getUploadDestinationFile(IOInterface $io, Project $project);
+
+    public function sendPackage(IOInterface $io, $source, $dest);
+
+    public function execServerCommand($cmd);
 }

@@ -13,12 +13,16 @@ namespace Octower;
 
 
 use Octower\IO\IOInterface;
+use Octower\Json\JsonFile;
+use Octower\Metadata\Loader\RootLoader;
 use Octower\Metadata\Project;
+use Octower\Remote\RemoteInterface;
 use Octower\Remote\SshRemote;
 use Octower\Util\ProcessExecutor;
 use Symfony\Component\Filesystem\Filesystem;
 
-class Deployer {
+class Deployer
+{
 
     /**
      * @var IOInterface
@@ -42,7 +46,7 @@ class Deployer {
 
     protected $files = array();
 
-    public function __construct(IOInterface $io, Config $config, Project $project, ProcessExecutor $process = null)
+    public function __construct(IOInterface $io, Config $config, Project $project = null, ProcessExecutor $process = null)
     {
         $this->io         = $io;
         $this->config     = $config;
@@ -63,7 +67,7 @@ class Deployer {
     public static function create(IOInterface $io, Octower $octower)
     {
         if (!$octower->getContext() instanceof Project) {
-            throw new \RuntimeException('Packager should be used in a project context only.');
+            throw new \RuntimeException('Deployer should be used in a project context only.');
         }
 
         /** @var Project $project */
@@ -76,12 +80,71 @@ class Deployer {
         );
     }
 
-    /**
-     * Run package creation
-     */
-    public function run(SshRemote $remote)
+    public function deploy(RemoteInterface $remote, $package)
     {
         $remote->isServerValid($this->io);
+
+        $dest = $remote->getUploadDestinationFile($this->io, $this->project);
+        $remote->sendPackage($this->io, $package, $dest);
+    }
+
+    public function enableLocal(Octower $octower, $release)
+    {
+        $releasePath = getcwd() . DIRECTORY_SEPARATOR . 'releases' . DIRECTORY_SEPARATOR . $release;
+        $sharedPath  = getcwd() . DIRECTORY_SEPARATOR . 'shared';
+        $currentPath = getcwd() . DIRECTORY_SEPARATOR . 'current';
+
+        if (file_exists($currentPath) && readlink($currentPath) == $releasePath) {
+            $this->io->write('<warning>This version is allready enabled.</warning>');
+            return;
+        }
+
+        $projectFile                = new JsonFile($releasePath . DIRECTORY_SEPARATOR . 'octower.json');
+        $projectConfig              = $projectFile->read();
+        $projectConfig['root_path'] = $releasePath;
+
+        $loader        = new RootLoader($octower->getConfig(), new ProcessExecutor($this->io));
+        $this->project = $loader->load($projectConfig);
+
+        $filesystem = new Filesystem();
+
+        // Deploy Shared
+        foreach ($this->project->getShared() as $shared => $sharedObject) {
+            $sharedKey = md5($shared);
+            if (!file_exists($sharedPath . DIRECTORY_SEPARATOR . $sharedKey)) {
+                $generator = sprintf('generateShared%s', ucfirst($sharedObject['generator']));
+                if (!method_exists($this, $generator)) {
+                    throw new \Exception('No generator found for shared ' . $shared);
+                }
+
+                $this->$generator($filesystem, $releasePath, $sharedPath . DIRECTORY_SEPARATOR . $sharedKey, $shared);
+            }
+
+            if (is_file($sharedPath . DIRECTORY_SEPARATOR . $sharedKey)) {
+                unlink($releasePath . DIRECTORY_SEPARATOR . $shared);
+                symlink($sharedPath . DIRECTORY_SEPARATOR . $sharedKey, $releasePath . DIRECTORY_SEPARATOR . $shared);
+            } else {
+                $filesystem->symlink($sharedPath . DIRECTORY_SEPARATOR . $sharedKey, rtrim($releasePath . DIRECTORY_SEPARATOR . $shared, '/'));
+            }
+        }
+
+
+        // Enable version
+        $filesystem->symlink($releasePath, rtrim($currentPath, "/"));
+    }
+
+    public function generateSharedEmptyFolder(Filesystem $filesystem, $projectRoot, $sharedPath, $path)
+    {
+        $filesystem->mkdir($sharedPath);
+    }
+
+    public function generateSharedDistFile(Filesystem $filesystem, $projectRoot, $sharedPath, $path)
+    {
+        if (!file_exists($projectRoot . DIRECTORY_SEPARATOR . $path . '.dist')) {
+            throw new \Exception(sprintf('dist file does not exists to generate shared file %s', $path));
+        }
+
+        $filesystem->copy($projectRoot . DIRECTORY_SEPARATOR . $path . '.dist', $sharedPath);
     }
 
 }

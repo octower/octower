@@ -80,10 +80,10 @@ EOT
 
         foreach($releases as $release) {
             if($currentMetadata && $release['version'] == $currentMetadata['version']) {
-                $this->getIO()->write(sprintf(' ->  <comment>%s</comment> by: %s - %s', $release['version'], str_replace(array('<', '>'), array('(', ')'), $release['author']), $release['packagedAt']->format(\DateTime::ISO8601)));
+                $this->getIO()->write(sprintf(' ->  <comment>%s</comment> by %s - %s', $release['version'], str_replace(array('<', '>'), array('(', ')'), $release['author']), $release['packagedAt']->format(\DateTime::ISO8601)));
             }
             else {
-                $this->getIO()->write(sprintf('     <comment>%s</comment> by: %s - %s', $release['version'], str_replace(array('<', '>'), array('(', ')'), $release['author']), $release['packagedAt']->format(\DateTime::ISO8601)));
+                $this->getIO()->write(sprintf('     <comment>%s</comment> by %s - %s', $release['version'], str_replace(array('<', '>'), array('(', ')'), $release['author']), $release['packagedAt']->format(\DateTime::ISO8601)));
             }
         }
     }
