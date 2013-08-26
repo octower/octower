@@ -33,7 +33,7 @@ class SelfUpdateCommand extends Command
             ->setDescription('Updates octower.phar to the latest version.')
             ->setHelp(<<<EOT
 The <info>self-update</info> command checks getoctower.org for newer
-versions of composer and if found, installs the latest.
+versions of octower and if found, installs the latest.
 
 <info>php octower.phar self-update</info>
 
@@ -58,7 +58,7 @@ EOT
         //$protocol = extension_loaded('openssl') ? 'https' : 'http';
         $protocol = 'http';
         $rfs      = new RemoteFilesystem($this->getIO());
-        $latest   = trim($rfs->getContents('getcomposer.org', $protocol . '://getcomposer.org/version', false));
+        $latest   = trim($rfs->getContents('getoctower.org', $protocol . '://getoctower.org/version', false));
 
         if (Octower::VERSION !== $latest) {
             $output->writeln(sprintf("Updating to version <info>%s</info>.", $latest));
