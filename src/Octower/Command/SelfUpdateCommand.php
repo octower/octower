@@ -56,7 +56,7 @@ EOT
         }
 
         //$protocol = extension_loaded('openssl') ? 'https' : 'http';
-        $protocal = 'http';
+        $protocol = 'http';
         $rfs      = new RemoteFilesystem($this->getIO());
         $latest   = trim($rfs->getContents('getcomposer.org', $protocol . '://getcomposer.org/version', false));
 
