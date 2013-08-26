@@ -17,6 +17,7 @@ use Octower\Json\JsonFile;
 use Octower\Metadata\Project;
 use Octower\Util\ProcessExecutor;
 use Octower\Ssh as Ssh;
+use Seld\JsonLint\ParsingException;
 
 class SshRemote implements RemoteInterface
 {
@@ -58,9 +59,9 @@ class SshRemote implements RemoteInterface
             throw new \RuntimeException('It seems that the remote is not a valid octower server');
         }
 
-        $output = $this->execSshInPath('php octower.phar server:info --automation --no-ansi');
+        $output     = $this->execSshInPath('php octower.phar server:info --automation --no-ansi');
         $outputJson = JsonFile::parseJson($output);
-        if($outputJson['statusCode'] != 0) {
+        if ($outputJson['statusCode'] != 0) {
             throw new \RuntimeException('It seems that the remote is not a valid & working octower server');
         }
 
@@ -72,7 +73,7 @@ class SshRemote implements RemoteInterface
         $output = $this->execSshInPath(sprintf('php octower.phar server:package:get-store %s --automation --no-ansi', $project->getNormalizedName()));
 
         $outputJson = JsonFile::parseJson($output);
-        $dest = $outputJson['output'];
+        $dest       = $outputJson['output'];
         $io->write('Temporary package file on the server: ' . $dest);
 
         return $dest;
@@ -94,13 +95,17 @@ class SshRemote implements RemoteInterface
     public function execServerCommand($cmd)
     {
         $output = $this->execSshInPath(sprintf('php octower.phar %s --automation --no-ansi', $cmd));
-        $outputJson = JsonFile::parseJson($output);
+        try {
+            $outputJson = JsonFile::parseJson($output);
 
-        if($outputJson['statusCode'] != 0) {
-            throw new \RuntimeException($outputJson['exception']);
+            if ($outputJson['statusCode'] != 0) {
+                throw new \RuntimeException($outputJson['exception']);
+            }
+
+            return $outputJson['output'];
+        } catch (ParsingException $ex) {
+            throw new \Exception($output);
         }
-
-        return $outputJson['output'];
     }
 
     protected function connect(IOInterface $io)
@@ -147,7 +152,7 @@ class SshRemote implements RemoteInterface
                             $publicKeyFile = $io->ask(sprintf('    <info>Public key file (%s not found)?</info> ', $publicKeyFile), '');
                         }
 
-                        $authentication = new Ssh\Authentication\PublicKeyFile($username, $publicKeyFile, $privateKeyFile);
+                        $authentication   = new Ssh\Authentication\PublicKeyFile($username, $publicKeyFile, $privateKeyFile);
                         $this->sshSession = new Ssh\Session($this->sshConfiguration, $authentication);
                         break 2;
                     case 'p':
