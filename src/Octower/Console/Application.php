@@ -192,6 +192,7 @@ class Application extends BaseApplication
         $commands = parent::getDefaultCommands();
 
         $commands[] = new Command\AboutCommand();
+        $commands[] = new Command\SelfUpdateCommand();
 
         $commands[] = new Command\PackageCommand();
         $commands[] = new Command\DeployCommand();
