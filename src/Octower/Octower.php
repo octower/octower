@@ -12,6 +12,7 @@
 namespace Octower;
 
 use Octower\Metadata\Context;
+use Octower\Script\EventDispatcher;
 
 /**
  * Class Octower
@@ -31,6 +32,11 @@ class Octower
      * @var Context
      */
     private $context;
+
+    /**
+     * @var EventDispatcher
+     */
+    private $eventDispatcher;
 
     /**
      * @param Config $config
@@ -71,4 +77,26 @@ class Octower
     {
         return $this->context;
     }
+
+    /**
+     * @param \Octower\Script\EventDispatcher $eventDispatcher
+     *
+     * @return Octower
+     */
+    public function setEventDispatcher($eventDispatcher)
+    {
+        $this->eventDispatcher = $eventDispatcher;
+
+        return $this;
+    }
+
+    /**
+     * @return \Octower\Script\EventDispatcher
+     */
+    public function getEventDispatcher()
+    {
+        return $this->eventDispatcher;
+    }
+
+
 }

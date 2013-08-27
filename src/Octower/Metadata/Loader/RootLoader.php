@@ -93,6 +93,15 @@ class RootLoader
             }
         }
 
+        if($config['scripts'])
+        {
+            foreach($config['scripts'] as $event => $scripts) {
+                foreach($scripts as $script) {
+                    $project->addScript($event, $script['command'], $script['priority']);
+                }
+            }
+        }
+
         if (file_exists(getcwd() . DIRECTORY_SEPARATOR . '.git') && is_dir(getcwd() . DIRECTORY_SEPARATOR . '.git')) {
             if ($this->process->execute('git log --pretty="%H" -n1 HEAD', $output) != 0) {
                 throw new \RuntimeException('Can\'t run git log. You must ensure to run compile from octower git repository clone and that git binary is available.');

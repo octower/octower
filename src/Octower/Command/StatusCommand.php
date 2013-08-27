@@ -47,6 +47,22 @@ EOT
         $io->write('<info>Project: <comment>' . $project->getName() . '</comment></info>');
         $io->write('<info>Version: <comment>' . $project->getVersion() . '</comment></info>');
 
+        $io->write('<info>Scripts:</info>');
+
+        foreach(Project::getScriptEvents() as $event) {
+            $scripts = $project->getScriptsByPriority($event);
+
+            if(count($scripts) == 0) {
+                continue;
+            }
+
+            $io->write(sprintf('    - <comment>%s</comment> :', $event));
+
+            foreach($scripts as $script) {
+                $io->write(sprintf('        - "%s" <notice>(priority : %s)</notice>', $script['command'], $script['priority']));
+            }
+        }
+
 
     }
 }

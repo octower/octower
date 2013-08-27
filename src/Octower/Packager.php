@@ -15,6 +15,8 @@ namespace Octower;
 use Octower\IO\IOInterface;
 use Octower\Json\JsonFile;
 use Octower\Metadata\Project;
+use Octower\Script\Event;
+use Octower\Script\EventDispatcher;
 use Octower\Util\ProcessExecutor;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
@@ -45,17 +47,26 @@ class Packager
      */
     protected $project;
 
+    /**
+     * @var Util\ProcessExecutor
+     */
     protected $process;
+
+    /**
+     * @var Script\EventDispatcher
+     */
+    protected $eventDispatcher;
 
     protected $files = array();
 
-    public function __construct(IOInterface $io, Config $config, Project $project, ProcessExecutor $process = null)
+    public function __construct(IOInterface $io, Config $config, Project $project, EventDispatcher $eventDispatcher, ProcessExecutor $process = null)
     {
-        $this->io         = $io;
-        $this->config     = $config;
-        $this->project    = $project;
-        $this->process    = $process ? : new ProcessExecutor();
-        $this->filesystem = new Filesystem();
+        $this->io              = $io;
+        $this->config          = $config;
+        $this->project         = $project;
+        $this->process         = $process ? : new ProcessExecutor();
+        $this->filesystem      = new Filesystem();
+        $this->eventDispatcher = $eventDispatcher;
     }
 
 
@@ -69,7 +80,7 @@ class Packager
 
         $metadata = JsonFile::parseJson($archive->getArchiveComment());
 
-        if(!$metadata || !isset($metadata['version'])) {
+        if (!$metadata || !isset($metadata['version'])) {
             throw new \Exception('Invalid package metadata');
         }
 
@@ -110,7 +121,8 @@ class Packager
         return new static(
             $io,
             $octower->getConfig(),
-            $project
+            $project,
+            $octower->getEventDispatcher()
         );
     }
 
@@ -140,6 +152,9 @@ class Packager
             unlink($buildDir . DIRECTORY_SEPARATOR . $packageName);
         }
 
+        $this->eventDispatcher->dispatch(Event::EVENT_PRE_PACKAGE);
+        die('pouet');
+
         $archive = new \ZipArchive();
         $archive->open($buildDir . DIRECTORY_SEPARATOR . $packageName, \ZipArchive::CREATE);
 
@@ -155,7 +170,7 @@ class Packager
 
         // Build Phar
         $this->io->write('<info>Build Package...</info>', false);
-        foreach($this->files as $name => $file) {
+        foreach ($this->files as $name => $file) {
             $archive->addFile($file, $name);
         }
         //$phar->buildFromIterator(new \ArrayIterator($this->files));
@@ -265,7 +280,7 @@ class Packager
 
     protected function addManifest(\ZipArchive $archive)
     {
-        $file = new JsonFile('.octower.manifest');
+        $file   = new JsonFile('.octower.manifest');
         $author = $this->getAuthor();
 
         $manifest = array(

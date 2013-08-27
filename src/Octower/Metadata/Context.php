@@ -11,11 +11,15 @@
 
 namespace Octower\Metadata;
 
+use Symfony\Component\Yaml\Exception\RuntimeException;
+
 abstract class Context
 {
     protected $name;
 
     protected $rootPath;
+
+    protected $scripts;
 
     /**
      * All descendants' constructors should call this parent constructor
@@ -24,8 +28,10 @@ abstract class Context
      */
     public function __construct($name)
     {
+        $this->scripts = array();
         $this->name = strtolower($name);
     }
+
     /**
      * {@inheritDoc}
      */
@@ -57,6 +63,82 @@ abstract class Context
     public function getRootPath()
     {
         return $this->rootPath;
+    }
+
+
+    public function addScript($eventName, $command, $priority)
+    {
+        if (!in_array($eventName, static::getScriptEvents())) {
+            throw new \UnexpectedValueException(sprintf('Event "%s" is not a valid octower project script event.', $eventName));
+        }
+
+        if (!isset($this->scripts[$eventName])) {
+            $this->scripts[$eventName] = array();
+        }
+
+        $this->scripts[$eventName][] = array(
+            'command'  => $command,
+            'priority' => $priority
+        );
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getScripts()
+    {
+        return $this->scripts;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getScriptsForEvent($eventName)
+    {
+        if (!in_array($eventName, static::getScriptEvents())) {
+            throw new \UnexpectedValueException(sprintf('Event "%s" is not a valid octower project script event.', $eventName));
+        }
+
+        return $this->scripts[$eventName];
+    }
+
+
+    /**
+     * @throws \RuntimeException
+     */
+    public static function getScriptEvents()
+    {
+        throw new \RuntimeException('You need to implement getScriptEvents() function');
+
+        return array();
+    }
+
+    /**
+     * @param $event
+     *
+     * @return mixed
+     * @throws \UnexpectedValueException
+     */
+    public function getScriptsByPriority($eventName)
+    {
+        if (!in_array($eventName, static::getScriptEvents())) {
+            throw new \UnexpectedValueException(sprintf('Event "%s" is not a valid octower project script event.', $eventName));
+        }
+
+        if (!isset($this->scripts[$eventName])) {
+            $this->scripts[$eventName] = array();
+        }
+
+        usort($this->scripts[$eventName], function ($s1, $s2) {
+            if ($s1['priority'] == $s2['priority']) {
+                return 0;
+            }
+
+            return $s1['priority'] < $s2['priority'] ? -1 : 1;
+        });
+
+
+        return $this->scripts[$eventName];
     }
 
     /**

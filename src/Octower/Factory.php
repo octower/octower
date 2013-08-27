@@ -14,6 +14,7 @@ namespace Octower;
 use Octower\Config\JsonConfigSource;
 use Octower\IO\IOInterface;
 use Octower\Json\JsonFile;
+use Octower\Script\EventDispatcher;
 use Octower\Util\ProcessExecutor;
 use Octower\Util\RemoteFilesystem;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
@@ -105,6 +106,10 @@ class Factory
             ->setConfig($config)
             ->setContext($context);
 
+        // initialize event dispatcher
+        $dispatcher = new EventDispatcher($octower, $io);
+        $octower->setEventDispatcher($dispatcher);
+
         return $octower;
     }
 
@@ -113,6 +118,7 @@ class Factory
         return array(
             'highlight' => new OutputFormatterStyle('red'),
             'warning'   => new OutputFormatterStyle('black', 'yellow'),
+            'notice'    => new OutputFormatterStyle('cyan')
         );
     }
 }

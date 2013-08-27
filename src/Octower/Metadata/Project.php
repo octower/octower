@@ -11,6 +11,7 @@
 namespace Octower\Metadata;
 
 use Octower\Remote\RemoteInterface;
+use Octower\Script\Event;
 
 class Project extends Context
 {
@@ -21,6 +22,8 @@ class Project extends Context
     protected $shared;
 
     protected $remotes;
+
+    protected $scripts;
 
     public function __construct($name)
     {
@@ -116,5 +119,18 @@ class Project extends Context
 
         return $this->remotes[$name];
     }
+
+    public static function getScriptEvents()
+    {
+        return array(
+            Event::EVENT_PRE_PACKAGE,
+            Event::EVENT_POST_EXTRACT,
+            Event::EVENT_PRE_ENABLE,
+            Event::EVENT_POST_ENABLE,
+            Event::EVENT_PRE_DISABLE,
+            Event::EVENT_POST_DISABLE,
+        );
+    }
+
 
 }
