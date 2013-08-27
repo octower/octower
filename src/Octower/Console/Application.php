@@ -194,6 +194,8 @@ class Application extends BaseApplication
         $commands[] = new Command\AboutCommand();
         $commands[] = new Command\SelfUpdateCommand();
 
+        $commands[] = new Command\StatusCommand();
+
         $commands[] = new Command\PackageCommand();
         $commands[] = new Command\DeployCommand();
         $commands[] = new Command\ReleaseListCommand();
