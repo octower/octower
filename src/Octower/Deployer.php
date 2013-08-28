@@ -135,7 +135,9 @@ class Deployer
             }
 
             if (is_file($sharedPath . DIRECTORY_SEPARATOR . $sharedKey)) {
-                unlink($releasePath . DIRECTORY_SEPARATOR . $shared);
+                if(file_exists($releasePath . DIRECTORY_SEPARATOR . $shared)) {
+                    unlink($releasePath . DIRECTORY_SEPARATOR . $shared);
+                }
                 symlink($sharedPath . DIRECTORY_SEPARATOR . $sharedKey, $releasePath . DIRECTORY_SEPARATOR . $shared);
             } else {
                 $filesystem->symlink($sharedPath . DIRECTORY_SEPARATOR . $sharedKey, rtrim($releasePath . DIRECTORY_SEPARATOR . $shared, '/'));
