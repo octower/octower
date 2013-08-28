@@ -18,6 +18,7 @@ use Octower\Metadata\Loader\RootLoader;
 use Octower\Metadata\Project;
 use Octower\Remote\RemoteInterface;
 use Octower\Remote\SshRemote;
+use Octower\Script\Event;
 use Octower\Util\ProcessExecutor;
 use Symfony\Component\Filesystem\Filesystem;
 
@@ -88,11 +89,24 @@ class Deployer
         $remote->sendPackage($this->io, $package, $dest);
     }
 
-    public function enableLocal(Octower $octower, $release)
+    public function enableLocal(Octower $octower, IOInterface $io, $release)
     {
         $releasePath = getcwd() . DIRECTORY_SEPARATOR . 'releases' . DIRECTORY_SEPARATOR . $release;
         $sharedPath  = getcwd() . DIRECTORY_SEPARATOR . 'shared';
         $currentPath = getcwd() . DIRECTORY_SEPARATOR . 'current';
+
+        if(!file_exists($releasePath) || !is_dir($releasePath)) {
+            throw new \Exception('Release not available');
+        }
+
+        // Load release project context to execute script
+        $projectFile                = new JsonFile($releasePath . DIRECTORY_SEPARATOR . 'octower.json');
+        $projectConfig              = $projectFile->read();
+        $projectConfig['root_path'] = $releasePath;
+
+        $loader = new RootLoader($octower->getConfig(), new ProcessExecutor($io));
+        /** @var Project $project */
+        $project = $loader->load($projectConfig);
 
         if (file_exists($currentPath) && readlink($currentPath) == $releasePath) {
             $this->io->write('<warning>This version is allready enabled.</warning>');
@@ -128,9 +142,12 @@ class Deployer
             }
         }
 
+        $octower->getEventDispatcher()->dispatch(Event::EVENT_PRE_ENABLE, $releasePath, $project);
 
         // Enable version
         $filesystem->symlink($releasePath, rtrim($currentPath, "/"));
+
+        $octower->getEventDispatcher()->dispatch(Event::EVENT_POST_ENABLE, $releasePath, $project);
     }
 
     public function generateSharedEmptyFolder(Filesystem $filesystem, $projectRoot, $sharedPath, $path)

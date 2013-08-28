@@ -99,6 +99,10 @@ abstract class Context
             throw new \UnexpectedValueException(sprintf('Event "%s" is not a valid octower project script event.', $eventName));
         }
 
+        if (!isset($this->scripts[$eventName])) {
+            $this->scripts[$eventName] = array();
+        }
+
         return $this->scripts[$eventName];
     }
 

@@ -12,8 +12,11 @@
 namespace Octower\Command\Server;
 
 use Octower\Json\JsonFile;
+use Octower\Metadata\Loader\RootLoader;
 use Octower\Metadata\Server;
 use Octower\Packager;
+use Octower\Script\Event;
+use Octower\Util\ProcessExecutor;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -40,8 +43,8 @@ EOT
         $package = $input->getArgument('package');
 
         $octower = $this->getOctower();
-        $io = $this->getIO();
+        $io      = $this->getIO();
 
-        Packager::extract($package);
+        Packager::extract($octower, $io, $package);
     }
 }

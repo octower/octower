@@ -44,6 +44,11 @@ class Event
     private $devMode;
 
     /**
+     * @var string project directory
+     */
+    private $cwd;
+
+    /**
      * Constructor.
      *
      * @param string      $name     The event name
@@ -51,11 +56,12 @@ class Event
      * @param IOInterface $io       The IOInterface object
      * @param boolean     $devMode  Whether or not we are in dev mode
      */
-    public function __construct($name, Octower $octower, IOInterface $io, $devMode = false)
+    public function __construct($name, Octower $octower, IOInterface $io, $cwd, $devMode = false)
     {
         $this->name    = $name;
         $this->octower = $octower;
         $this->io      = $io;
+        $this->cwd     = $cwd;
         $this->devMode = $devMode;
     }
 
@@ -98,4 +104,14 @@ class Event
     {
         return $this->devMode;
     }
+
+    /**
+     * @return string
+     */
+    public function getCwd()
+    {
+        return $this->cwd;
+    }
+
+
 }

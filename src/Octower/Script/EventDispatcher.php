@@ -12,6 +12,7 @@
 namespace Octower\Script;
 
 use Octower\IO\IOInterface;
+use Octower\Metadata\Context;
 use Octower\Octower;
 use Octower\Util\ProcessExecutor;
 use Symfony\Component\Process\Process;
@@ -56,27 +57,25 @@ class EventDispatcher
      * @param string $eventName The constant in ScriptEvents
      * @param Event  $event
      */
-    public function dispatch($eventName, Event $event = null)
+    public function dispatch($eventName, $cwd = null, Context $additionalContext = null)
     {
-        if (null == $event) {
-            $event = new Event($eventName, $this->octower, $this->io);
-        }
-
-        $this->doDispatch($event);
+        $event = new Event($eventName, $this->octower, $this->io, $cwd);
+        $this->doDispatch($event, $additionalContext);
     }
 
-    protected function doDispatch(Event $event)
+    protected function doDispatch(Event $event, Context $additionalContext = null)
     {
-        $listeners = $this->getListeners($event);
+        $listeners = $this->getListeners($event, $additionalContext);
         foreach ($listeners as $listener) {
-
 
             $listenerProcess = new Process($listener['command']);
             $listenerProcess->setTimeout(null);
             $listenerProcess->setTty(true);
+            $listenerProcess->setWorkingDirectory($event->getCwd());
 
-            $this->io->write(sprintf('<comment>---------------------------------------</comment>
-<info>Execute script "%s"</info> <notice>in %s</notice>', $listenerProcess->getCommandLine(), $listenerProcess->getWorkingDirectory()));
+            $this->io->write('<comment>---------------------------------------</comment>');
+            $this->io->write(sprintf('<info>Execute script "%s"</info> <notice>in %s</notice>', $listenerProcess->getCommandLine(), $listenerProcess->getWorkingDirectory()));
+
             $listenerProcess->run(function ($type, $data) {
                 echo $data;
             });
@@ -84,22 +83,23 @@ class EventDispatcher
             if (!$listenerProcess->isSuccessful()) {
                 throw new \RuntimeException($listenerProcess->getErrorOutput());
             }
-
-
         }
-
-        die();
     }
 
     /**
-     * @param  Event $event Event object
+     * @param Event   $event
+     * @param Context $additionalContext
      *
-     * @return array Listeners
+     * @return array|mixed
      */
-    protected function getListeners(Event $event)
+    protected function getListeners(Event $event, Context $additionalContext = null)
     {
         $context = $this->octower->getContext();
         $scripts = $context->getScriptsForEvent($event->getName());
+
+        if($additionalContext != null) {
+            $scripts = array_merge($additionalContext->getScriptsForEvent($event->getName()), $scripts);
+        }
 
         if (empty($scripts)) {
             return array();

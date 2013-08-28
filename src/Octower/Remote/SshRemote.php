@@ -47,19 +47,19 @@ class SshRemote implements RemoteInterface
         $this->config  = $config;
         $this->process = $process ? : new ProcessExecutor();
 
-        $this->sshConfiguration = new Ssh\Configuration($config['hostname'], $this->config['port'] ? : 22);
+        $this->sshConfiguration = new Ssh\Configuration($config['hostname'], isset($this->config['port']) ? : 22);
     }
 
     public function isServerValid(IOInterface $io)
     {
         $this->connect($io);
 
-        $output = $this->execSshInPath('ls -l | grep octower.phar');
+        $output = $this->execSshInPath('ls -l | grep octower.phar', $io);
         if (!strlen($output) > 0 && strpos($output, 'octower.phar') !== false) {
             throw new \RuntimeException('It seems that the remote is not a valid octower server');
         }
 
-        $output     = $this->execSshInPath('php octower.phar server:info --automation --no-ansi');
+        $output     = $this->execSshInPath('php octower.phar server:info --automation --no-ansi', $io);
         $outputJson = JsonFile::parseJson($output);
         if ($outputJson['statusCode'] != 0) {
             throw new \RuntimeException('It seems that the remote is not a valid & working octower server');
@@ -70,7 +70,7 @@ class SshRemote implements RemoteInterface
 
     public function getUploadDestinationFile(IOInterface $io, Project $project)
     {
-        $output = $this->execSshInPath(sprintf('php octower.phar server:package:get-store %s --automation --no-ansi', $project->getNormalizedName()));
+        $output = $this->execSshInPath(sprintf('php octower.phar server:package:get-store %s --automation --no-ansi', $project->getNormalizedName()), $io);
 
         $outputJson = JsonFile::parseJson($output);
         $dest       = $outputJson['output'];
@@ -87,14 +87,14 @@ class SshRemote implements RemoteInterface
 
         $io->write('<info>Extracting package on server...</info>', false);
 
-        $this->execSshInPath(sprintf('php octower.phar server:package:extract %s --automation --no-ansi', $dest));
+        $this->execSshInPath(sprintf('php octower.phar server:package:extract %s --automation --no-ansi', $dest), $io);
 
         $io->overwrite('<info>Extracting package on server... <comment>Success</comment></info>', true);
     }
 
-    public function execServerCommand($cmd)
+    public function execServerCommand($cmd, IOInterface $io = null)
     {
-        $output = $this->execSshInPath(sprintf('php octower.phar %s --automation --no-ansi', $cmd));
+        $output = $this->execSshInPath(sprintf('php octower.phar %s --automation --no-ansi', $cmd), $io);
         try {
             $outputJson = JsonFile::parseJson($output);
 
@@ -217,8 +217,12 @@ class SshRemote implements RemoteInterface
         $io->overwrite(sprintf('<info>Upload package on server... <comment>Done</comment></info> - Total time: %s', self::secondToDisplay(microtime(true) - $start)));
     }
 
-    protected function execSshInPath($cmd)
+    protected function execSshInPath($cmd, IOInterface $io = null)
     {
+        if($io) {
+            $io->write(sprintf('exec "%s" in <notice>%s</notice>', $cmd, $this->config['path']));
+        }
+
         return $this->sshSession->getExec()->run(sprintf('cd %s && %s', $this->config['path'], $cmd));
     }
 

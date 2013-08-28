@@ -67,15 +67,15 @@ class RootLoader
         // handle already normalized versions
         $project = new Project($config['name']);
 
-        if (is_array($config['shared'])) {
+        if (isset($config['shared']) && is_array($config['shared'])) {
             $project->setShared($config['shared']);
         }
 
-        if (is_array($config['excluded'])) {
+        if (isset($config['excluded']) && is_array($config['excluded'])) {
             $project->setExcluded($config['excluded']);
         }
 
-        if ($config['remotes']) {
+        if (isset($config['remotes']) && is_array($config['remotes'])) {
             foreach ($config['remotes'] as $name => $remoteConfig) {
                 $remote = null;
                 switch ($remoteConfig['type']) {
@@ -93,7 +93,7 @@ class RootLoader
             }
         }
 
-        if($config['scripts'])
+        if(isset($config['scripts']) && is_array($config['scripts']))
         {
             foreach($config['scripts'] as $event => $scripts) {
                 foreach($scripts as $script) {

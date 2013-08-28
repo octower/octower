@@ -37,10 +37,7 @@ EOT
     {
         $this->checkServerContext();
 
-        /** @var Server $server */
-        $server = $this->getOctower()->getContext();
-
         $deployer = new Deployer($this->getIO(), $this->getOctower()->getConfig());
-        $deployer->enableLocal($this->getOctower(), $input->getArgument('release'));
+        $deployer->enableLocal($this->getOctower(), $this->getIO(), $input->getArgument('release'));
     }
 }

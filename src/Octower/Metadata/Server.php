@@ -10,7 +10,18 @@
 
 namespace Octower\Metadata;
 
+use Octower\Script\Event;
+
 class Server extends Context
 {
-
+    public static function getScriptEvents()
+    {
+        return array(
+            Event::EVENT_POST_EXTRACT,
+            Event::EVENT_PRE_ENABLE,
+            Event::EVENT_POST_ENABLE,
+            Event::EVENT_PRE_DISABLE,
+            Event::EVENT_POST_DISABLE,
+        );
+    }
 }
