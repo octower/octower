@@ -60,7 +60,11 @@ class EventDispatcher
     public function dispatch($eventName, $cwd = null, Context $additionalContext = null)
     {
         $event = new Event($eventName, $this->octower, $this->io, $cwd);
-        $this->doDispatch($event, $additionalContext);
+        try {
+            $this->doDispatch($event, $additionalContext);
+        } catch (\RuntimeException $ex) {
+            throw new \Exception('An error occured during the process : ' . $ex->getMessage(), null, $ex);
+        }
     }
 
     protected function doDispatch(Event $event, Context $additionalContext = null)
@@ -70,18 +74,35 @@ class EventDispatcher
 
             $listenerProcess = new Process($listener['command']);
             $listenerProcess->setTimeout(null);
-            $listenerProcess->setTty(true);
-            $listenerProcess->setWorkingDirectory($event->getCwd());
 
-            $this->io->write('<comment>---------------------------------------</comment>');
+            $listenerProcess->setWorkingDirectory($event->getCwd());
             $this->io->write(sprintf('<info>Execute script "%s"</info> <notice>in %s</notice>', $listenerProcess->getCommandLine(), $listenerProcess->getWorkingDirectory()));
 
-            $listenerProcess->run(function ($type, $data) {
-                echo $data;
-            });
+            $output      = array();
+            $outputError = array();
+
+            while (!$listenerProcess->isStarted() || $listenerProcess->isRunning()) {
+
+                if (!$listenerProcess->isStarted()) {
+                    $listenerProcess->start();
+
+                    continue;
+                }
+
+                $_output      = $listenerProcess->getIncrementalOutput();
+                $_outputError = $listenerProcess->getIncrementalErrorOutput();
+
+                if ($_output) {
+                    $output[] = $_output;
+                }
+
+                if ($_outputError) {
+                    $outputError[] = $_outputError;
+                }
+            }
 
             if (!$listenerProcess->isSuccessful()) {
-                throw new \RuntimeException($listenerProcess->getErrorOutput());
+                throw new \RuntimeException(sprintf('The script %s for the event %s has failed.', $listener['command'], $event->getName()));
             }
         }
     }
@@ -97,7 +118,7 @@ class EventDispatcher
         $context = $this->octower->getContext();
         $scripts = $context->getScriptsForEvent($event->getName());
 
-        if($additionalContext != null) {
+        if ($additionalContext != null) {
             $scripts = array_merge($additionalContext->getScriptsForEvent($event->getName()), $scripts);
         }
 
