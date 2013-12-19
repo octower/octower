@@ -113,7 +113,7 @@ class SshRemote implements RemoteInterface
         if ($this->sshSession)
             return;
 
-        $io->write(sprintf('Connecting to %s', $this->config['hostname']));
+        $io->write(sprintf('Connecting to %s (port: %s)', $this->config['hostname'], $this->config['port']));
 
         $tryCount = 0;
         do {
