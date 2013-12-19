@@ -32,10 +32,10 @@ class LocalRemote implements RemoteInterface
     private $filesystem;
 
 
-    public function __construct($config,ProcessExecutor $process = null)
+    public function __construct($config, ProcessExecutor $process = null)
     {
-        $this->path    = $config['path'];
-        $this->process = $process ? : new ProcessExecutor();
+        $this->path       = $config['path'];
+        $this->process    = $process ? : new ProcessExecutor();
         $this->filesystem = new Filesystem();
     }
 
@@ -82,5 +82,14 @@ class LocalRemote implements RemoteInterface
         return trim($output);
     }
 
+    public function override($config)
+    {
+        if (!$config || !is_array($config)) {
+            return;
+        }
 
+        if (isset($config['path'])) {
+            $this->path = $config['path'];
+        }
+    }
 }

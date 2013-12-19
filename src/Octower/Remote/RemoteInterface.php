@@ -23,4 +23,6 @@ interface RemoteInterface {
     public function sendPackage(IOInterface $io, $source, $dest);
 
     public function execServerCommand($cmd);
+
+    public function override($config);
 }

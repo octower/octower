@@ -33,7 +33,8 @@ EOT
             )
             ->addArgument('remote', InputArgument::REQUIRED)
             ->addArgument('package', InputArgument::OPTIONAL)
-            ->addOption('generate', 'g', InputOption::VALUE_NONE);
+            ->addOption('generate', 'g', InputOption::VALUE_NONE)
+            ->addOption('override', 'o', InputOption::VALUE_OPTIONAL, 'Override remote information for connecting');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -65,6 +66,8 @@ EOT
 
         // Contact the server
         $remote = $project->getRemote($input->getArgument('remote'));
+        $remote->override(json_decode($input->getOption('override'), true));
+
         $deployer = Deployer::create($this->getIO(), $this->getOctower());
         $deployer->deploy($remote, $packagePath);
 

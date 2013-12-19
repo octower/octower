@@ -47,7 +47,18 @@ class SshRemote implements RemoteInterface
         $this->config  = $config;
         $this->process = $process ? : new ProcessExecutor();
 
-        $this->sshConfiguration = new Ssh\Configuration($config['hostname'], $this->getPort());
+        $this->initialize();
+    }
+
+    public function override($config)
+    {
+        if (!$config || !is_array($config)) {
+            return;
+        }
+
+        $this->config = array_merge($this->config, $config);
+
+        $this->initialize();
     }
 
     public function isServerValid(IOInterface $io)
@@ -108,10 +119,16 @@ class SshRemote implements RemoteInterface
         }
     }
 
+    protected function initialize()
+    {
+        $this->sshConfiguration = new Ssh\Configuration($this->config['hostname'], $this->getPort());
+    }
+
     protected function connect(IOInterface $io)
     {
-        if ($this->sshSession)
+        if ($this->sshSession) {
             return;
+        }
 
         $io->write(sprintf('Connecting to %s (port: %s)', $this->config['hostname'], $this->getPort()));
 
@@ -133,11 +150,11 @@ class SshRemote implements RemoteInterface
 
 
             $io->write(array(
-                '    <comment>Authentification mode:</comment>',
-                '        k - public key',
-                '        p - password',
-                '        ? - print help'
-            ));
+                           '    <comment>Authentification mode:</comment>',
+                           '        k - public key',
+                           '        p - password',
+                           '        ? - print help'
+                       ));
 
             while (true) {
                 switch ($io->ask('    <info>Your choice [k,p,?]?</info> ', '?')) {
@@ -163,9 +180,9 @@ class SshRemote implements RemoteInterface
                     default:
                         help:
                         $io->write(array(
-                            '    k - public key',
-                            '    p - password',
-                        ));
+                                       '    k - public key',
+                                       '    p - password',
+                                   ));
 
                         $io->write('    ? - print help');
                         break;
@@ -219,7 +236,7 @@ class SshRemote implements RemoteInterface
 
     protected function execSshInPath($cmd, IOInterface $io = null)
     {
-        if($io) {
+        if ($io) {
             $io->write(sprintf('exec "%s" in <notice>%s</notice>', $cmd, $this->config['path']));
         }
 
