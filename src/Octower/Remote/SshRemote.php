@@ -47,7 +47,7 @@ class SshRemote implements RemoteInterface
         $this->config  = $config;
         $this->process = $process ? : new ProcessExecutor();
 
-        $this->sshConfiguration = new Ssh\Configuration($config['hostname'], isset($this->config['port']) ? $this->config['port'] : 22);
+        $this->sshConfiguration = new Ssh\Configuration($config['hostname'], $this->getPort());
     }
 
     public function isServerValid(IOInterface $io)
@@ -113,7 +113,7 @@ class SshRemote implements RemoteInterface
         if ($this->sshSession)
             return;
 
-        $io->write(sprintf('Connecting to %s (port: %s)', $this->config['hostname'], $this->config['port']));
+        $io->write(sprintf('Connecting to %s (port: %s)', $this->config['hostname'], $this->getPort()));
 
         $tryCount = 0;
         do {
@@ -244,5 +244,10 @@ class SshRemote implements RemoteInterface
         $texte[] = sprintf('%s seconds', round($temp));
 
         return join(' ', $texte);
+    }
+
+    protected function getPort()
+    {
+        return isset($this->config['port']) ? $this->config['port'] : 22;
     }
 }
