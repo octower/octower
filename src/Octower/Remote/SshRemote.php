@@ -47,7 +47,7 @@ class SshRemote implements RemoteInterface
         $this->config  = $config;
         $this->process = $process ? : new ProcessExecutor();
 
-        $this->sshConfiguration = new Ssh\Configuration($config['hostname'], isset($this->config['port']) ? : 22);
+        $this->sshConfiguration = new Ssh\Configuration($config['hostname'], isset($this->config['port']) ? $this->config['port'] : 22);
     }
 
     public function isServerValid(IOInterface $io)
