@@ -24,6 +24,30 @@ Once installed execute the following command to initialize your server configura
     
 This will generate the directory tree and an octower.json used for server configuration.
 
+@TODO : explain the directory tree and concept of enabled release and shared folde (or add this information on a dedicated page).
+
 ## Your first deployment
 
-@TODO
+### Create an archive of your project 
+
+First step is to generate an archive of your project :
+
+    $ php octower.phar package:generate
+    
+This will create an .octopack file which is an archive of your local project. 
+
+### Deploy on your remote server
+
+Send the package (the .octopack file) to the server where you want to deploy your project.
+
+Once connected to your server extract the package so that octower recognize it :
+
+    $ php octower.phar server:package:extract <path of your package.octopack>
+    
+Your release should now be recognized by octower : 
+
+    $ php octower.phar server:release:list
+    
+You can enable the release :
+
+    $ php octower.phar server:release:enable <id of the release>
