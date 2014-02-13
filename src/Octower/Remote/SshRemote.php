@@ -98,9 +98,15 @@ class SshRemote implements RemoteInterface
 
         $io->write('<info>Extracting package on server...</info>', false);
 
-        $this->execSshInPath(sprintf('php octower.phar server:package:extract %s --automation --no-ansi', $dest), $io);
-
-        $io->overwrite('<info>Extracting package on server... <comment>Success</comment></info>', true);
+        try
+        {
+            $this->execServerCommand(sprintf('server:package:extract %s', $dest), $io);
+            $io->overwrite('<info>Extracting package on server... <comment>Success</comment></info>', true);
+        }
+        catch(\RuntimeException $ex) {
+            $io->overwrite('<info>Extracting package on server... <error>Failed</error></info>', true);
+            $io->write(sprintf('<error>%s</error>',$ex->getMessage()), true);
+        }
     }
 
     public function execServerCommand($cmd, IOInterface $io = null)
@@ -108,6 +114,8 @@ class SshRemote implements RemoteInterface
         $output = $this->execSshInPath(sprintf('php octower.phar %s --automation --no-ansi', $cmd), $io);
         try {
             $outputJson = JsonFile::parseJson($output);
+
+            $io->write($outputJson['output']);
 
             if ($outputJson['statusCode'] != 0) {
                 throw new \RuntimeException($outputJson['exception']);
