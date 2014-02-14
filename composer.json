@@ -23,10 +23,6 @@
     "require-dev": {
         "phpunit/phpunit": "~3.7.10"
     },
-    "suggest": {
-        "ext-zip": "Enabling the zip extension allows you to unzip archives, and allows gzip compression of all internet traffic",
-        "ext-openssl": "Enabling the openssl extension allows you to access https URLs for repositories and packages"
-    },
     "autoload": {
         "psr-0": { "Octower": "src/" }
     },
