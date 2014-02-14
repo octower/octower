@@ -12,6 +12,7 @@
 namespace Octower;
 
 
+use Octower\Deploy\SharedGenerator\GeneratorInterface;
 use Octower\IO\IOInterface;
 use Octower\Json\JsonFile;
 use Octower\Metadata\Loader\RootLoader;
@@ -21,6 +22,7 @@ use Octower\Remote\SshRemote;
 use Octower\Script\Event;
 use Octower\Util\ProcessExecutor;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Yaml\Parser;
 
 class Deployer
 {
@@ -45,14 +47,30 @@ class Deployer
      */
     protected $project;
 
+    /**
+     * @var array
+     */
     protected $files = array();
+
+    protected $deprecatedGenerators;
+
+    protected $generators;
+
+    protected $generatorsInstance;
 
     public function __construct(IOInterface $io, Config $config, Project $project = null, ProcessExecutor $process = null)
     {
-        $this->io         = $io;
-        $this->config     = $config;
-        $this->project    = $project;
-        $this->filesystem = new Filesystem();
+        $this->io                 = $io;
+        $this->config             = $config;
+        $this->project            = $project;
+        $this->filesystem         = new Filesystem();
+        $this->generatorsInstance = array();
+
+        $this->generators = array(
+            'folder-emtpy'   => 'Octower\Deploy\SharedGenerator\EmptyFolderGenerator',
+            'file-dist'      => 'Octower\Deploy\SharedGenerator\DistFileGenerator',
+            'file-yaml-dist' => 'Octower\Deploy\SharedGenerator\DistFileYamlGenerator'
+        );
     }
 
     /**
@@ -91,11 +109,11 @@ class Deployer
 
     public function enableLocal(Octower $octower, IOInterface $io, $release)
     {
-        $releasePath = getcwd() . DIRECTORY_SEPARATOR . 'releases' . DIRECTORY_SEPARATOR . $release;
-        $sharedPath  = getcwd() . DIRECTORY_SEPARATOR . 'shared';
-        $currentPath = getcwd() . DIRECTORY_SEPARATOR . 'current';
+        $releasePath   = getcwd() . DIRECTORY_SEPARATOR . 'releases' . DIRECTORY_SEPARATOR . $release;
+        $sharedBaseDir = getcwd() . DIRECTORY_SEPARATOR . 'shared';
+        $currentPath   = getcwd() . DIRECTORY_SEPARATOR . 'current';
 
-        if(!file_exists($releasePath) || !is_dir($releasePath)) {
+        if (!file_exists($releasePath) || !is_dir($releasePath)) {
             throw new \Exception('Release not available');
         }
 
@@ -110,7 +128,8 @@ class Deployer
 
         if (file_exists($currentPath) && readlink($currentPath) == $releasePath) {
             $this->io->write('<warning>This version is allready enabled.</warning>');
-            return;
+
+            return false;
         }
 
         $projectFile                = new JsonFile($releasePath . DIRECTORY_SEPARATOR . 'octower.json');
@@ -124,23 +143,12 @@ class Deployer
 
         // Deploy Shared
         foreach ($this->project->getShared() as $shared => $sharedObject) {
-            $sharedKey = md5($shared);
-            if (!file_exists($sharedPath . DIRECTORY_SEPARATOR . $sharedKey)) {
-                $generator = sprintf('generateShared%s', ucfirst($sharedObject['generator']));
-                if (!method_exists($this, $generator)) {
-                    throw new \Exception('No generator found for shared ' . $shared);
-                }
+            try {
+                $this->prepareShared($filesystem, $releasePath, $sharedBaseDir, $shared, $sharedObject);
+            } catch (\Exception $ex) {
+                $this->io->write(sprintf('<error>Unable to handle shared object %s : %s.</error>', $shared, $ex->getMessage()));
 
-                $this->$generator($filesystem, $releasePath, $sharedPath . DIRECTORY_SEPARATOR . $sharedKey, $shared);
-            }
-
-            if (is_file($sharedPath . DIRECTORY_SEPARATOR . $sharedKey)) {
-                if(file_exists($releasePath . DIRECTORY_SEPARATOR . $shared)) {
-                    unlink($releasePath . DIRECTORY_SEPARATOR . $shared);
-                }
-                symlink($sharedPath . DIRECTORY_SEPARATOR . $sharedKey, $releasePath . DIRECTORY_SEPARATOR . $shared);
-            } else {
-                $filesystem->symlink($sharedPath . DIRECTORY_SEPARATOR . $sharedKey, rtrim($releasePath . DIRECTORY_SEPARATOR . $shared, '/'));
+                return false;
             }
         }
 
@@ -150,20 +158,63 @@ class Deployer
         $filesystem->symlink($releasePath, rtrim($currentPath, "/"));
 
         $octower->getEventDispatcher()->dispatch(Event::EVENT_POST_ENABLE, $releasePath, $project);
+
+        return true;
     }
 
-    public function generateSharedEmptyFolder(Filesystem $filesystem, $projectRoot, $sharedPath, $path)
+    public function prepareShared(Filesystem $filesystem, $releasePath, $sharedBaseDir, $shared, $sharedObject)
     {
-        $filesystem->mkdir($sharedPath);
-    }
+        $sharedKey           = md5($shared);
+        $sharedPath          = $sharedBaseDir . DIRECTORY_SEPARATOR . $sharedKey;
+        $sharedInReleasePath = $releasePath . DIRECTORY_SEPARATOR . $shared;
 
-    public function generateSharedDistFile(Filesystem $filesystem, $projectRoot, $sharedPath, $path)
-    {
-        if (!file_exists($projectRoot . DIRECTORY_SEPARATOR . $path . '.dist')) {
-            throw new \Exception(sprintf('dist file does not exists to generate shared file %s', $path));
+        // If the shared does not exist we create it using generator
+        if (!file_exists($sharedPath)) {
+            $this->getGenerator($sharedObject['generator'])->generate($filesystem, $releasePath, $sharedPath, $shared);
+        } else {
+            $this->getGenerator($sharedObject['generator'])->update($filesystem, $releasePath, $sharedPath, $shared);
         }
 
-        $filesystem->copy($projectRoot . DIRECTORY_SEPARATOR . $path . '.dist', $sharedPath);
+        if (file_exists($sharedInReleasePath) && (!is_link($sharedInReleasePath) || readlink($sharedInReleasePath) !== $sharedPath)) {
+            // Error file or directory exist
+            throw new \RuntimeException(sprintf('File, directory or other symbolic link allready exist at %s. Remove or move them to proceed to release activation.', $sharedInReleasePath));
+        }
+
+        if (is_file($sharedPath)) {
+            symlink($sharedPath, $sharedInReleasePath);
+        } else {
+            $filesystem->symlink($sharedPath, rtrim($sharedInReleasePath, '/'));
+        }
     }
 
+    /**
+     * @param $name string
+     *
+     * @return GeneratorInterface
+     * @throws \RuntimeException
+     */
+    protected function getGenerator($name)
+    {
+        if (!isset($this->generatorsInstance[$name])) {
+
+            $deprecated = array(
+                'emptyFolder' => 'folder-empty',
+                'distFile'    => 'file-dist'
+            );
+
+            // Handle old name
+            if (in_array($name, $deprecated)) {
+                $this->io->write(sprintf('<warning>deprecated generator name "%s". Use "%s" instead.</warning>', $name, $deprecated[$name]));
+                $name = $deprecated[$name];
+            }
+
+            if (!array_key_exists($name, $this->generators)) {
+                throw new \RuntimeException(sprintf('Invalid generator found : %s', $name));
+            }
+
+            $this->generatorsInstance[$name] = new $this->generators[$name];
+        }
+
+        return $this->generatorsInstance[$name];
+    }
 }
