@@ -165,8 +165,8 @@ class Deployer
     public function prepareShared(Filesystem $filesystem, $releasePath, $sharedBaseDir, $shared, $sharedObject)
     {
         $sharedKey           = md5($shared);
-        $sharedPath          = $sharedBaseDir . DIRECTORY_SEPARATOR . $sharedKey;
-        $sharedInReleasePath = $releasePath . DIRECTORY_SEPARATOR . $shared;
+        $sharedPath          = rtrim($sharedBaseDir . DIRECTORY_SEPARATOR . $sharedKey, DIRECTORY_SEPARATOR);
+        $sharedInReleasePath = rtrim($releasePath . DIRECTORY_SEPARATOR . $shared, DIRECTORY_SEPARATOR);
 
         // If the shared does not exist we create it using generator
         if (!file_exists($sharedPath)) {
