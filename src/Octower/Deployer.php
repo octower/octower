@@ -169,28 +169,15 @@ class Deployer
         $sharedInReleasePath = rtrim($releasePath . DIRECTORY_SEPARATOR . $shared, DIRECTORY_SEPARATOR);
 
         // If the shared does not exist we create it using generator
-        if (!file_exists($sharedPath)) {
+        if (!file_exists($sharedPath) ) {
             $this->getGenerator($sharedObject['generator'])->generate($filesystem, $releasePath, $sharedPath, $shared);
         } else {
             $this->getGenerator($sharedObject['generator'])->update($filesystem, $releasePath, $sharedPath, $shared);
         }
 
-        if (file_exists($sharedInReleasePath)) {
-            var_dump($sharedInReleasePath, is_link($sharedInReleasePath));
-            if(!is_link($sharedInReleasePath)) {
-                // Error file or directory exist
-                throw new \RuntimeException(sprintf('File, directory or other symbolic link allready exist at %s. Remove or move them to proceed to release activation.', $sharedInReleasePath));   
-            }
-            else {
-                var_dump(readlink($sharedInReleasePath), $sharedPath);
-                
-                if (readlink($sharedInReleasePath) !== $sharedPath) {
-                    // Error file or directory exist
-                    throw new \RuntimeException(sprintf('File, directory or other symbolic link allready exist at %s. Remove or move them to proceed to release activation.', $sharedInReleasePath));   
-                }
-            }
-            
-            //if (!is_link($sharedInReleasePath) || readlink($sharedInReleasePath) !== $sharedPath)) {
+        if (file_exists($sharedInReleasePath) && (!is_link($sharedInReleasePath) || readlink($sharedInReleasePath) !== $sharedPath))) {
+            // Error file or directory exist
+            throw new \RuntimeException(sprintf('File, directory or other symbolic link allready exist at %s. Remove or move them to proceed to release activation.', $sharedInReleasePath));
         }
 
         if (is_file($sharedPath)) {
