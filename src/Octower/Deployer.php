@@ -176,7 +176,7 @@ class Deployer
         }
 
         if (file_exists($sharedInReleasePath)) {
-            var_dump($sharedInReleasePath, is_link($sharedInReleasePath))
+            var_dump($sharedInReleasePath, is_link($sharedInReleasePath));
             if(!is_link($sharedInReleasePath)) {
                 // Error file or directory exist
                 throw new \RuntimeException(sprintf('File, directory or other symbolic link allready exist at %s. Remove or move them to proceed to release activation.', $sharedInReleasePath));   
