@@ -67,7 +67,7 @@ class Deployer
         $this->generatorsInstance = array();
 
         $this->generators = array(
-            'folder-emtpy'   => 'Octower\Deploy\SharedGenerator\EmptyFolderGenerator',
+            'folder-empty'   => 'Octower\Deploy\SharedGenerator\EmptyFolderGenerator',
             'file-dist'      => 'Octower\Deploy\SharedGenerator\DistFileGenerator',
             'file-yaml-dist' => 'Octower\Deploy\SharedGenerator\DistFileYamlGenerator'
         );
