@@ -203,7 +203,7 @@ class Deployer
             );
 
             // Handle old name
-            if (in_array($name, $deprecated)) {
+            if (array_key_exists($name, $deprecated)) {
                 $this->io->write(sprintf('<warning>deprecated generator name "%s". Use "%s" instead.</warning>', $name, $deprecated[$name]));
                 $name = $deprecated[$name];
             }
