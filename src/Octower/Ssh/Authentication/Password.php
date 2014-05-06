@@ -40,6 +40,7 @@ class Password implements Authentication
      */
     public function authenticate($session)
     {
-        return ssh2_auth_password($session, $this->username, $this->password);
+        // Hide auth warning
+        return @ssh2_auth_password($session, $this->username, $this->password);
     }
 }
