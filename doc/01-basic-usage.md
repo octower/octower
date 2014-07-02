@@ -10,13 +10,13 @@ You need this executable both on your local dev folder and on your server
 
 ## Local configuration
 
-To use Octower you need to create an `octower.json` file at the root of your project. 
+To use Octower you need to create an `octower.json` file at the root of your project.
 
-For mode information about local configuration please check this page (make a link to the configuration page).
+For more information please [check the local configuration page](/doc/03-local-configuration.md).
 
 ## Server configuration
 
-Octower is needed on the server you want to deplay (follow the same process than above to install it).
+Octower is needed on the server you want to deploy (follow the same process than above to install it).
 
 Once installed execute the following command to initialize your server configuration :
 
@@ -24,7 +24,7 @@ Once installed execute the following command to initialize your server configura
     
 This will generate the directory tree and an octower.json used for server configuration.
 
-@TODO : explain the directory tree and concept of enabled release and shared folde (or add this information on a dedicated page).
+@TODO : explain the directory tree and concept of enabled release and shared folder (or add this information on a dedicated page).
 
 ## Your first deployment
 
