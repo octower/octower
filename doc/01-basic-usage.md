@@ -24,7 +24,7 @@ Once installed execute the following command to initialize your server configura
     
 This will generate the directory tree and an octower.json used for server configuration.
 
-For more information please [check the server side concepts page](/doc/04-server-site-concepts.md).
+For more information please [check the server side concepts page](/doc/04-server-side-concepts.md).
 
 ## Your first deployment
 
