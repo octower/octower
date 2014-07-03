@@ -39,6 +39,10 @@ class LocalRemote implements RemoteInterface
         $this->filesystem = new Filesystem();
     }
 
+    public function supported()
+    {
+    }
+
     public function isServerValid(IOInterface $io)
     {
         $io->write(sprintf('<info>Local server path:</info> %s', $this->path));

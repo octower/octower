@@ -50,6 +50,13 @@ class SshRemote implements RemoteInterface
         $this->initialize();
     }
 
+    public function supported()
+    {
+        if (!function_exists("ssh2_connect")) {
+            throw new RemoteNotSupportedException('SSH remote requires you have SSH2 php extension installed. See http://www.php.net/manual/fr/book.ssh2.php');
+        }
+    }
+
     public function override($config)
     {
         if (!$config || !is_array($config)) {
