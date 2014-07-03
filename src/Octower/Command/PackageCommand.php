@@ -11,9 +11,10 @@
 
 namespace Octower\Command;
 
-use Octower\Octower;
+use Octower\Metadata\Project;
 use Octower\Packager;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class PackageCommand extends Command
@@ -23,6 +24,7 @@ class PackageCommand extends Command
         $this
             ->setName('package:generate')
             ->setDescription('Create package to deploy')
+            ->addOption('version', 'v', InputOption::VALUE_OPTIONAL)
             ->setHelp(<<<EOT
 <info>php octower.phar package:generate</info>
 EOT
@@ -33,6 +35,13 @@ EOT
     {
         $octower = $this->getOctower();
         $io = $this->getIO();
+
+        if ($input->hasOption('version')) {
+            $context = $octower->getContext();
+            if ($context instanceof Project) {
+                $context->setVersion($input->getOption('version'));
+            }
+        }
 
         $packager = Packager::create($io, $octower);
         $packager->run();

@@ -33,6 +33,7 @@ EOT
             )
             ->addArgument('remote', InputArgument::REQUIRED)
             ->addArgument('package', InputArgument::OPTIONAL)
+            ->addOption('version', 'v', InputOption::VALUE_OPTIONAL)
             ->addOption('generate', 'g', InputOption::VALUE_NONE)
             ->addOption('override', 'o', InputOption::VALUE_OPTIONAL, 'Override remote information for connecting');
     }
@@ -45,6 +46,7 @@ EOT
         if (!$octower->getContext() instanceof Project) {
             throw new \RuntimeException('The current context is not a project context.');
         }
+
 
         /** @var Project $project */
         $project = $octower->getContext();
@@ -60,7 +62,16 @@ EOT
         if ($input->getOption('generate')) {
             $packager    = Packager::create($io, $octower);
             $packagePath = $packager->run(rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR), uniqid('octower-package'));
+
+            if ($input->hasOption('version')) {
+                $project->setVersion($input->getOption('version'));
+            }
+
         } else {
+            if ($input->hasOption('version')) {
+                throw new InvalidArgumentException('Unable to set a version if you choose to deploy an existing package.');
+            }
+
             $packagePath = realpath(trim($input->getArgument('package')));
         }
 
