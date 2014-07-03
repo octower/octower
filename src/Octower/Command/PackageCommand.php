@@ -24,7 +24,7 @@ class PackageCommand extends Command
         $this
             ->setName('package:generate')
             ->setDescription('Create package to deploy')
-            ->addOption('version', null, InputOption::VALUE_OPTIONAL)
+            ->addOption('force-version', 'fv', InputOption::VALUE_OPTIONAL)
             ->setHelp(<<<EOT
 <info>php octower.phar package:generate</info>
 EOT
