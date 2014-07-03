@@ -33,7 +33,7 @@ EOT
             )
             ->addArgument('remote', InputArgument::REQUIRED)
             ->addArgument('package', InputArgument::OPTIONAL)
-            ->addOption('version', InputOption::VALUE_OPTIONAL)
+            ->addOption('version', null,InputOption::VALUE_OPTIONAL)
             ->addOption('generate', 'g', InputOption::VALUE_NONE)
             ->addOption('override', 'o', InputOption::VALUE_OPTIONAL, 'Override remote information for connecting');
     }
