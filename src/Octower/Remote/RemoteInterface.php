@@ -16,6 +16,8 @@ use Octower\Metadata\Project;
 
 interface RemoteInterface {
 
+    public function supported();
+
     public function isServerValid(IOInterface $io);
 
     public function getUploadDestinationFile(IOInterface $io, Project $project);

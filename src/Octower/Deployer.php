@@ -101,6 +101,7 @@ class Deployer
 
     public function deploy(RemoteInterface $remote, $package)
     {
+        $remote->supported();
         $remote->isServerValid($this->io);
 
         $dest = $remote->getUploadDestinationFile($this->io, $this->project);

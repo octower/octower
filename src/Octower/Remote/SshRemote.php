@@ -44,10 +44,17 @@ class SshRemote implements RemoteInterface
 
     public function __construct($config, ProcessExecutor $process = null)
     {
-        $this->config  = $config;
+        $this->config = $config;
         $this->process = $process ? : new ProcessExecutor();
 
         $this->initialize();
+    }
+
+    public function supported()
+    {
+        if (!function_exists("ssh2_connect")) {
+            throw new RemoteNotSupportedException('SSH remote requires you have SSH2 php extension installed. See http://www.php.net/manual/fr/book.ssh2.php');
+        }
     }
 
     public function override($config)
@@ -70,7 +77,7 @@ class SshRemote implements RemoteInterface
             throw new \RuntimeException('It seems that the remote is not a valid octower server');
         }
 
-        $output     = $this->execSshInPath('php octower.phar server:info --automation --no-ansi', $io);
+        $output = $this->execSshInPath('php octower.phar server:info --automation --no-ansi', $io);
         $outputJson = JsonFile::parseJson($output);
         if ($outputJson['statusCode'] != 0) {
             throw new \RuntimeException('It seems that the remote is not a valid & working octower server');
@@ -84,7 +91,7 @@ class SshRemote implements RemoteInterface
         $output = $this->execSshInPath(sprintf('php octower.phar server:package:get-store %s --automation --no-ansi', $project->getNormalizedName()), $io);
 
         $outputJson = JsonFile::parseJson($output);
-        $dest       = $outputJson['output'];
+        $dest = $outputJson['output'];
         $io->write('Temporary package file on the server: ' . $dest);
 
         return $dest;
@@ -98,14 +105,12 @@ class SshRemote implements RemoteInterface
 
         $io->write('<info>Extracting package on server...</info>', false);
 
-        try
-        {
+        try {
             $this->execServerCommand(sprintf('server:package:extract %s', $dest), $io);
             $io->overwrite('<info>Extracting package on server... <comment>Success</comment></info>', true);
-        }
-        catch(\RuntimeException $ex) {
+        } catch (\RuntimeException $ex) {
             $io->overwrite('<info>Extracting package on server... <error>Failed</error></info>', true);
-            $io->write(sprintf('<error>%s</error>',$ex->getMessage()), true);
+            $io->write(sprintf('<error>%s</error>', $ex->getMessage()), true);
         }
     }
 
@@ -158,11 +163,11 @@ class SshRemote implements RemoteInterface
 
 
             $io->write(array(
-                           '    <comment>Authentification mode:</comment>',
-                           '        k - public key',
-                           '        p - password',
-                           '        ? - print help'
-                       ));
+                '    <comment>Authentification mode:</comment>',
+                '        k - public key',
+                '        p - password',
+                '        ? - print help'
+            ));
 
             while (true) {
                 switch ($io->ask('    <info>Your choice [k,p,?]?</info> ', '?')) {
@@ -177,20 +182,20 @@ class SshRemote implements RemoteInterface
                             $publicKeyFile = $io->ask(sprintf('    <info>Public key file (%s not found)?</info> ', $publicKeyFile), '');
                         }
 
-                        $authentication   = new Ssh\Authentication\PublicKeyFile($username, $publicKeyFile, $privateKeyFile);
+                        $authentication = new Ssh\Authentication\PublicKeyFile($username, $publicKeyFile, $privateKeyFile);
                         $this->sshSession = new Ssh\Session($this->sshConfiguration, $authentication);
                         break 2;
                     case 'p':
-                        $authentication   = new Ssh\Authentication\Password($username, $io->askAndHideAnswer('    <info>Password to connect with?</info> '));
+                        $authentication = new Ssh\Authentication\Password($username, $io->askAndHideAnswer('    <info>Password to connect with?</info> '));
                         $this->sshSession = new Ssh\Session($this->sshConfiguration, $authentication);
                         break 2;
                     case '?':
                     default:
                         help:
                         $io->write(array(
-                                       '    k - public key',
-                                       '    p - password',
-                                   ));
+                            '    k - public key',
+                            '    p - password',
+                        ));
 
                         $io->write('    ? - print help');
                         break;
@@ -217,8 +222,8 @@ class SshRemote implements RemoteInterface
 
         $filesize = filesize($source);
         $io->progressStart($filesize);
-        $start        = microtime(true);
-        $previousPos  = 0;
+        $start = microtime(true);
+        $previousPos = 0;
         $previousTick = $start;
 
         // send file's content
@@ -228,13 +233,13 @@ class SshRemote implements RemoteInterface
 
             // Update progression
             $currentPos = ftell($fp);
-            $tick       = microtime(true);
+            $tick = microtime(true);
 
-            $progression   = ($currentPos / $filesize) * 100;
-            $speed         = (($currentPos - $previousPos) / ($tick - $previousTick)) / 1000;
+            $progression = ($currentPos / $filesize) * 100;
+            $speed = (($currentPos - $previousPos) / ($tick - $previousTick)) / 1000;
             $remainingTime = (($filesize - $currentPos) * ($tick - $start)) / $currentPos;
 
-            $previousPos  = $currentPos;
+            $previousPos = $currentPos;
             $previousTick = $tick;
             $io->overwrite(sprintf('<info>Upload package on server... <comment>%s%% (%s kB/s)</comment></info> - Estimated remaining time: %s', number_format($progression, 2), number_format($speed, 2), self::secondToDisplay($remainingTime)), false);
         }
@@ -253,17 +258,17 @@ class SshRemote implements RemoteInterface
 
     protected static function secondToDisplay($time)
     {
-        $temp  = $time;
+        $temp = $time;
         $texte = array();
 
         if ($temp >= 3600) {
             $texte[] = sprintf('%s hours', round($temp / 3600));
-            $temp    = $temp % 3600;
+            $temp = $temp % 3600;
         }
 
         if ($temp >= 60) {
             $texte[] = sprintf('%s minutes', round($temp / 60));
-            $temp    = $temp % 60;
+            $temp = $temp % 60;
         }
 
         $texte[] = sprintf('%s seconds', round($temp));

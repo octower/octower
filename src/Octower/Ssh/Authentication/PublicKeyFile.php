@@ -46,7 +46,7 @@ class PublicKeyFile implements Authentication
      */
     public function authenticate($session)
     {
-        return ssh2_auth_pubkey_file(
+        return @ssh2_auth_pubkey_file(
             $session,
             $this->username,
             $this->publicKeyFile,
