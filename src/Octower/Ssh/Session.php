@@ -12,6 +12,7 @@
 namespace Octower\Ssh;
 
 use InvalidArgumentException, RuntimeException;
+use Octower\Ssh\Exceptions\SshConnectionFailedException;
 
 /**
  * SSH session
@@ -140,7 +141,7 @@ class Session extends AbstractResourceHolder
         $resource = $this->connect($this->configuration->asArguments());
 
         if (!is_resource($resource)) {
-            throw new RuntimeException('The SSH connection failed.');
+            throw new SshConnectionFailedException();
         }
 
         $this->resource = $resource;
@@ -159,7 +160,7 @@ class Session extends AbstractResourceHolder
      */
     protected function connect(array $arguments)
     {
-        return call_user_func_array('ssh2_connect', $arguments);
+        return @call_user_func_array('ssh2_connect', $arguments);
     }
 
     /**
