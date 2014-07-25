@@ -1,6 +1,6 @@
-## Local configuration
+# Local configuration
 
-### Minimum `octower.json` file
+## Minimum `octower.json` file
 
     {
         "name": "<your project name>",
