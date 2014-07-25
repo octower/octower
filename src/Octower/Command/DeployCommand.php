@@ -33,7 +33,7 @@ EOT
             )
             ->addArgument('remote', InputArgument::REQUIRED)
             ->addArgument('package', InputArgument::OPTIONAL)
-            ->addOption('force-version', 'fv', InputOption::VALUE_OPTIONAL)
+            ->addOption('force-version', 'fv', InputOption::VALUE_REQUIRED)
             ->addOption('generate', 'g', InputOption::VALUE_NONE)
             ->addOption('override', 'o', InputOption::VALUE_OPTIONAL, 'Override remote information for connecting');
     }
@@ -63,12 +63,12 @@ EOT
             $packager    = Packager::create($io, $octower);
             $packagePath = $packager->run(rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR), uniqid('octower-package'));
 
-            if ($input->hasOption('version')) {
-                $project->setVersion($input->getOption('version'));
+            if ($input->getOption('force-version')) {
+                $project->setVersion($input->getOption('force-version'));
             }
 
         } else {
-            if ($input->hasOption('version')) {
+            if ($input->getOption('force-version')) {
                 throw new InvalidArgumentException('Unable to set a version if you choose to deploy an existing package.');
             }
 

@@ -24,7 +24,7 @@ class PackageCommand extends Command
         $this
             ->setName('package:generate')
             ->setDescription('Create package to deploy')
-            ->addOption('force-version', 'fv', InputOption::VALUE_OPTIONAL)
+            ->addOption('force-version', 'fv', InputOption::VALUE_REQUIRED)
             ->setHelp(<<<EOT
 <info>php octower.phar package:generate</info>
 EOT
@@ -36,10 +36,10 @@ EOT
         $octower = $this->getOctower();
         $io = $this->getIO();
 
-        if ($input->hasOption('version')) {
+        if ($input->getOption('force-version')) {
             $context = $octower->getContext();
             if ($context instanceof Project) {
-                $context->setVersion($input->getOption('version'));
+                $context->setVersion($input->getOption('force-version'));
             }
         }
 
