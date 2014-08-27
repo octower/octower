@@ -256,12 +256,30 @@ class Packager
             }
         }
 
+        $relativeExcluded = array();
         foreach ($this->project->getExcluded() as $path) {
-            if (is_dir($path)) {
-                $finder->notPath($path);
+            if(strpos($path, '/') === 0){
+                $relativeExcluded[] = substr($path, 0, -1);
             } else {
-                $finder->notPath(sprintf('/%s$/', str_replace('/', '\/', $path)));
+                if (is_dir($path)) {
+                    $finder->notPath($path);
+                } else {
+                    $finder->notPath(sprintf('/%s$/', str_replace('/', '\/', $path)));
+                }
             }
+        }
+
+        if(count($relativeExcluded) > 0){
+            $finder->filter(
+                function(SplFileInfo $splFileInfo) use (&$relativeExcluded) {
+                    foreach ($relativeExcluded as $excludedRelativePath) {
+                        if(strpos($splFileInfo->getRelativePath(), $excludedRelativePath) === 0){
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            );
         }
 
         $i     = 0;
