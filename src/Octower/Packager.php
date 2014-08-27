@@ -215,7 +215,7 @@ class Packager
             ->notName('*.*~')
             ->in(getcwd() . DIRECTORY_SEPARATOR . $vendorPath);
 
-        $i     = 0;
+        $i = 0;
         $count = $finder->count();
 
         $this->io->write(sprintf('<info>Adding vendors files... <comment>%s/%s</comment></info>', $i, $count), false);
@@ -258,7 +258,7 @@ class Packager
 
         $relativeExcluded = array();
         foreach ($this->project->getExcluded() as $path) {
-            if(strpos($path, '/') === 0){
+            if (strpos($path, '/') === 0) {
                 $relativeExcluded[] = substr($path, 0, -1);
             } else {
                 if (is_dir($path)) {
@@ -269,20 +269,21 @@ class Packager
             }
         }
 
-        if(count($relativeExcluded) > 0){
+        if (count($relativeExcluded) > 0) {
             $finder->filter(
-                function(SplFileInfo $splFileInfo) use (&$relativeExcluded) {
+                function (SplFileInfo $splFileInfo) use (&$relativeExcluded) {
                     foreach ($relativeExcluded as $excludedRelativePath) {
-                        if(strpos($splFileInfo->getRelativePath(), $excludedRelativePath) === 0){
+                        if (strpos($splFileInfo->getRelativePath(), $excludedRelativePath) === 0) {
                             return false;
                         }
                     }
+
                     return true;
                 }
             );
         }
 
-        $i     = 0;
+        $i = 0;
         $count = $finder->count();
 
         $this->io->write(sprintf('<info>Adding project files... <comment>%s/%s</comment></info>', $i, $count), false);
