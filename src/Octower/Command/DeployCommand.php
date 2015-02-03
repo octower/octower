@@ -50,6 +50,7 @@ EOT
 
         /** @var Project $project */
         $project = $octower->getContext();
+        $remote = $project->getRemote($input->getArgument('remote'));
 
         if (!$input->getOption('generate') && strlen($input->getArgument('package')) == 0) {
             throw new InvalidArgumentException('No package provided and no --generate flag used.');
@@ -76,7 +77,6 @@ EOT
         }
 
         // Contact the server
-        $remote = $project->getRemote($input->getArgument('remote'));
         $remote->override(json_decode($input->getOption('override'), true));
 
         $deployer = Deployer::create($this->getIO(), $this->getOctower());
