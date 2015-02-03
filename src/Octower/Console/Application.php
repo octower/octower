@@ -14,6 +14,8 @@ namespace Octower\Console;
 use Octower\Factory;
 use Octower\IO\ConsoleIO;
 use Octower\IO\IOInterface;
+use Octower\Metadata\Project;
+use Octower\Metadata\Server;
 use Octower\Octower;
 use Octower\Command;
 use Symfony\Component\Console\Application as BaseApplication;
@@ -105,6 +107,9 @@ class Application extends BaseApplication
             chdir($newWorkDir);
         }
 
+        // enable contextual commands
+        $this->enableCommands();
+
         $result = parent::doRun($input, $output);
 
         if (isset($oldWorkingDir)) {
@@ -194,22 +199,42 @@ class Application extends BaseApplication
         $commands[] = new Command\AboutCommand();
         $commands[] = new Command\SelfUpdateCommand();
 
-        $commands[] = new Command\StatusCommand();
-
-        $commands[] = new Command\PackageCommand();
-        $commands[] = new Command\DeployCommand();
-        $commands[] = new Command\ReleaseListCommand();
-        $commands[] = new Command\ReleaseEnableCommand();
-        $commands[] = new Command\TestCommand();
-
-        $commands[] = new Command\Server\InitializeCommand();
-        $commands[] = new Command\Server\InfoCommand();
-        $commands[] = new Command\Server\PackageGetStoreCommand();
-        $commands[] = new Command\Server\PackageExtractCommand();
-        $commands[] = new Command\Server\ReleaseListCommand();
-        $commands[] = new Command\Server\ReleaseEnableCommand();
-
         return $commands;
+    }
+
+    /**
+     * Enable contextual (server or project) command base on octower.json file
+     */
+    protected function enableCommands()
+    {
+        $octower = $this->getOctower(false);
+
+        $commands = array();
+        if (!$octower) {
+            // out of existing context
+            $this->add(new Command\Server\InitializeCommand());
+
+            return;
+        }
+
+        if ($octower->getContext() instanceof Project) {
+            $commands[] = new Command\StatusCommand();
+            $commands[] = new Command\PackageCommand();
+            $commands[] = new Command\DeployCommand();
+            $commands[] = new Command\ReleaseListCommand();
+            $commands[] = new Command\ReleaseEnableCommand();
+            $commands[] = new Command\TestCommand();
+        }
+
+        if ($octower->getContext() instanceof Server) {
+            $commands[] = new Command\Server\InfoCommand();
+            $commands[] = new Command\Server\PackageGetStoreCommand();
+            $commands[] = new Command\Server\PackageExtractCommand();
+            $commands[] = new Command\Server\ReleaseListCommand();
+            $commands[] = new Command\Server\ReleaseEnableCommand();
+        }
+
+        $this->addCommands($commands);
     }
 
     /**
@@ -245,6 +270,7 @@ class Application extends BaseApplication
     private function getNewWorkingDir(InputInterface $input)
     {
         $workingDir = $input->getParameterOption(array('--working-dir', '-d'));
+
         if (false !== $workingDir && !is_dir($workingDir)) {
             throw new \RuntimeException('Invalid working directory specified.');
         }
