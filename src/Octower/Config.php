@@ -17,8 +17,9 @@ class Config
 {
     public static $defaultConfig = array(
         'process-timeout' => 300,
-        'use-composer'    => true,
         'vendor-dir'      => null,
+        'releases-dir'    => 'releases',
+        'max-number-release' => false
     );
 
     private $config;
@@ -72,7 +73,6 @@ class Config
                 $env = 'OCTOWER_' . strtoupper(strtr($key, '-', '_'));
 
                 return rtrim($this->process(getenv($env) ? : $this->config[$key]), '/\\');
-
             default:
                 if (!isset($this->config[$key])) {
                     return null;

@@ -71,7 +71,7 @@ class Packager
     }
 
 
-    public static function extract(Octower $octower, IOInterface $io, $package)
+    public static function extract(ReleaseManager $releaseManager, $package)
     {
         $filesystem = new Filesystem();
 
@@ -85,7 +85,7 @@ class Packager
             throw new \Exception('Invalid package metadata');
         }
 
-        $releaseTarget = sprintf('releases/%s', $metadata['version']);
+        $releaseTarget = $releaseManager->getReleaseDirectory($metadata['version']);
 
         if ($filesystem->exists($releaseTarget)) {
             throw new \Exception('Release allready exist on the server');
@@ -98,17 +98,6 @@ class Packager
         } catch (\Exception $ex) {
             throw $ex;
         }
-
-        // Load release project context to execute script
-        $projectFile                = new JsonFile($releaseTarget . DIRECTORY_SEPARATOR . 'octower.json');
-        $projectConfig              = $projectFile->read();
-        $projectConfig['root_path'] = $releaseTarget;
-
-        $loader = new RootLoader($octower->getConfig(), new ProcessExecutor($io));
-        /** @var  $project */
-        $project = $loader->load($projectConfig);
-
-        $octower->getEventDispatcher()->dispatch(Event::EVENT_POST_EXTRACT, $releaseTarget, $project);
 
         return $releaseTarget;
     }
