@@ -176,13 +176,18 @@ class Deployer
             $this->getGenerator($sharedObject['generator'])->update($filesystem, $releasePath, $sharedPath, $shared);
         }
 
-        if (file_exists($sharedInReleasePath) && (!is_link($sharedInReleasePath) || readlink($sharedInReleasePath) !== $sharedPath)) {
-            // Error file or directory exist
-            throw new \RuntimeException(sprintf('File, directory or other symbolic link allready exist at %s. Remove or move them to proceed to release activation.', $sharedInReleasePath));
+        if (file_exists($sharedInReleasePath)) {
+            if (!is_link($sharedInReleasePath) || readlink($sharedInReleasePath) !== $sharedPath) {
+                // Error file or directory exist
+                throw new \RuntimeException(sprintf('File, directory or other symbolic link allready exist at %s. Remove or move them to proceed to release activation.', $sharedInReleasePath));
+            }
+
+            // Link exist and is valid
+            return;
         }
 
         if (is_file($sharedPath)) {
-            symlink($sharedPath, $sharedInReleasePath);
+            $filesystem->symlink($sharedPath, $sharedInReleasePath);
         } else {
             $filesystem->symlink($sharedPath, rtrim($sharedInReleasePath, '/'));
         }
