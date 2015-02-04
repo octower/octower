@@ -12,8 +12,10 @@
 namespace Octower\Command\Server;
 
 use Octower\Json\JsonFile;
+use Octower\Metadata\Release;
 use Octower\Metadata\Server;
 use Octower\Packager;
+use Octower\ReleaseManager;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -37,54 +39,21 @@ EOT
     {
         $this->checkServerContext();
 
+        $octower = $this->getOctower();
+        $io      = $this->getIO();
+        $releaseManager = new ReleaseManager($io, $octower);
+
         /** @var Server $server */
         $server = $this->getOctower()->getContext();
 
-        $currentMetadata = null;
-        if(file_exists(getcwd() . DIRECTORY_SEPARATOR . 'current/.octower.manifest')) {
-            $currentJsonManifest = new JsonFile(getcwd() . DIRECTORY_SEPARATOR . 'current/.octower.manifest');
-            $currentMetadata = $currentJsonManifest->read();
-            $currentMetadata['packagedAt'] = new \DateTime($currentMetadata['packagedAt']);
-        }
+        $releases = $releaseManager->all();
+        $current = $releaseManager->current();
 
-        // Find all releases
-        $finder = new Finder();
-        $finder
-            ->depth(0)
-            ->directories()
-            ->in(getcwd() . DIRECTORY_SEPARATOR . 'releases/');
-
-        $releases = array();
-
-        foreach ($finder as $dir) {
-            if(!file_exists($dir . DIRECTORY_SEPARATOR . '.octower.manifest')) {
-                continue;
-            }
-
-            $jsonManifest = new JsonFile($dir . DIRECTORY_SEPARATOR . '.octower.manifest');
-            $metadata = $jsonManifest->read();
-            $metadata['packagedAt'] = new \DateTime($metadata['packagedAt']);
-
-            $releases[] = $metadata;
-        }
-
-        usort($releases, function($r1, $r2) {
-            if($r1['packagedAt'] == $r2['packagedAt']) {
-                return 0;
-            }
-
-            return $r1['packagedAt'] < $r2['packagedAt'] ? -1 : 1;
-        });
-
+        // Display informations
         $this->getIO()->write(sprintf('<info>Releases on "%s":</info>',$server->getName()));
 
-        foreach($releases as $release) {
-            if($currentMetadata && $release['version'] == $currentMetadata['version']) {
-                $this->getIO()->write(sprintf(' ->  <comment>%s</comment> by %s - %s', $release['version'], str_replace(array('<', '>'), array('(', ')'), $release['author']), $release['packagedAt']->format(\DateTime::ISO8601)));
-            }
-            else {
-                $this->getIO()->write(sprintf('     <comment>%s</comment> by %s - %s', $release['version'], str_replace(array('<', '>'), array('(', ')'), $release['author']), $release['packagedAt']->format(\DateTime::ISO8601)));
-            }
+        foreach ($releases as $release) {
+            $this->getIO()->write(sprintf(' %s  <comment>%s</comment> by %s - %s', ($current && $release->getVersion() == $current->getVersion() ? '->' : '  '), $release->getVersion(), str_replace(array('<', '>'), array('(', ')'), $release->getAuthor()), $release->getPackagedAt()->format(\DateTime::ISO8601)));
         }
     }
 }

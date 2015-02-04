@@ -231,6 +231,7 @@ class Application extends BaseApplication
             $commands[] = new Command\Server\PackageGetStoreCommand();
             $commands[] = new Command\Server\PackageExtractCommand();
             $commands[] = new Command\Server\ReleaseListCommand();
+            $commands[] = new Command\Server\ReleaseCleanCommand();
             $commands[] = new Command\Server\ReleaseEnableCommand();
         }
 

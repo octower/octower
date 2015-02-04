@@ -12,41 +12,37 @@
 namespace Octower\Command\Server;
 
 use Octower\Json\JsonFile;
-use Octower\Metadata\Loader\RootLoader;
+use Octower\Metadata\Release;
 use Octower\Metadata\Server;
 use Octower\Packager;
 use Octower\ReleaseManager;
-use Octower\Script\Event;
-use Octower\Util\ProcessExecutor;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Finder\Finder;
 
-class PackageExtractCommand extends ServerCommand
+class ReleaseCleanCommand extends ServerCommand
 {
     protected function configure()
     {
         $this
-            ->setName('server:package:extract')
-            ->setDescription('Extract a package')
+            ->setName('server:release:clean')
+            ->setDescription('Clean release available on the server')
             ->setHelp(<<<EOT
-<info>php octower.phar server:package:extract</info>
+<info>%command.full_name%</info>
 EOT
-            )
-            ->addArgument('package', InputArgument::REQUIRED);
+            );
     }
 
     protected function doExecute(InputInterface $input)
     {
         $this->checkServerContext();
 
-        $package = $input->getArgument('package');
-
         $octower = $this->getOctower();
         $io      = $this->getIO();
-
         $releaseManager = new ReleaseManager($io, $octower);
-        $releaseManager->install($package);
+
+        $releaseManager->clean();
     }
 }

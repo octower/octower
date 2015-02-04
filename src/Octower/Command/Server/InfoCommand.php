@@ -44,5 +44,12 @@ EOT
         $server = $octower->getContext();
 
         $io->write(sprintf('<info>%s</info>', $server->getName()));
+
+        $io->write('<info>Configuration:</info>');
+        $config = $octower->getConfig()->all('config');
+        foreach ($config['config'] as $key => $value) {
+            $io->write(sprintf('    - <notice>%s</notice> : <comment>%s</comment>', $key, var_export($value, true)));
+        }
+
     }
 }
