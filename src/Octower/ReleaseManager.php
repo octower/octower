@@ -180,11 +180,11 @@ class ReleaseManager
         $filesystem = new Filesystem();
         $this->io->write(sprintf('<info>Delete release... <comment>%s/%s</comment></info>', 0, $numberToRemove), false);
         for ($i = 0; $i < $numberToRemove; $i++) {
-            $this->io->write(sprintf('<info>Delete release... <comment>%s/%s</comment></info>', $i+1, $numberToRemove), false);
+            $this->io->overwrite(sprintf('<info>Delete release... <comment>%s/%s</comment></info>', $i+1, $numberToRemove), false);
             $filesystem->remove($releases[$i]->getDirectory());
         }
 
-        $this->io->write('<info>Delete release... <comment>Done</comment></info>', trie);
+        $this->io->overwrite('<info>Delete release... <comment>Done</comment></info>', true);
     }
 
     public function getReleaseDirectory($version)
