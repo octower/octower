@@ -23,7 +23,7 @@ Once `$ php octower.phar server:init` is executed on the server it creates the f
 
 ## Server side `octower.json` file
 
-```
+```json
 {
     "name": "Octower Server",
     "type": "server",
