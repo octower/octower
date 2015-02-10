@@ -21,6 +21,8 @@ use Seld\JsonLint\ParsingException;
 
 class SshRemote implements RemoteInterface
 {
+    const CHUNK_SIZE = 8192;
+
     private $config;
 
     /**
@@ -228,7 +230,7 @@ class SshRemote implements RemoteInterface
 
         // send file's content
         while (!feof($fp)) {
-            $chunk = fread($fp, 8192);
+            $chunk = fread($fp, self::CHUNK_SIZE);
             fwrite($remoteFp, $chunk);
 
             // Update progression

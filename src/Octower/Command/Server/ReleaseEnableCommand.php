@@ -25,7 +25,7 @@ class ReleaseEnableCommand extends ServerCommand
     {
         $this
             ->setName('server:release:enable')
-            ->setDescription('List release available on the server')
+            ->setDescription('Enable release on the server')
             ->setHelp(<<<EOT
 <info>php octower.phar server:release:list</info>
 EOT

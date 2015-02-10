@@ -131,6 +131,11 @@ class Packager
 
     /**
      * Run package creation
+     * @param null $buildDir
+     * @param null $packageName
+     *
+     * @return string
+     * @throws \Exception
      */
     public function run($buildDir = null, $packageName = null)
     {

@@ -61,12 +61,12 @@ EOT
         }
 
         if ($input->getOption('generate')) {
-            $packager    = Packager::create($io, $octower);
-            $packagePath = $packager->run(rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR), uniqid('octower-package'));
-
             if ($input->getOption('force-version')) {
                 $project->setVersion($input->getOption('force-version'));
             }
+
+            $packager    = Packager::create($io, $octower);
+            $packagePath = $packager->run(rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR), uniqid('octower-package'));
 
         } else {
             if ($input->getOption('force-version')) {

@@ -76,7 +76,8 @@ class ReleaseManager
         $projectConfig              = $projectFile->read();
         $projectConfig['root_path'] = $releaseTarget;
 
-        $loader = new RootLoader($projectConfig, new ProcessExecutor($this->io));
+
+        $loader = new RootLoader($this->config, new ProcessExecutor($this->io));
         /** @var  $project */
         $project = $loader->load($projectConfig);
 
