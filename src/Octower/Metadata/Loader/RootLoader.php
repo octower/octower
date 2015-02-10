@@ -107,6 +107,7 @@ class RootLoader
                 throw new \RuntimeException('Can\'t run git log. You must ensure to run compile from octower git repository clone and that git binary is available.');
             }
 
+
             $project->setVersion(trim($output));
 
             if ($this->process->execute('git describe --tags HEAD', $output) == 0) {
