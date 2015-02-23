@@ -143,6 +143,16 @@ class Packager
             $buildDir = getcwd();
         }
 
+        $buildDir = realpath($buildDir);
+
+        if (!$this->filesystem->exists($buildDir)) {
+            $this->filesystem->mkdir($buildDir);
+        }
+
+        if (!is_dir($buildDir)) {
+            throw new \InvalidArgumentException(sprintf('Unable to generate package to %s : this is not a directory.', $buildDir));
+        }
+
         $this->io->write(sprintf('<info>Project: <comment>%s</comment></info>', $this->project->getName()));
         $this->io->write(sprintf('<info>Version: <comment>%s</comment></info>', $this->project->getVersion()));
 
@@ -151,19 +161,20 @@ class Packager
         }
 
         $packageName .= static::PACKAGE_EXTENSION;
+        $packageFullPath = $buildDir . DIRECTORY_SEPARATOR . $packageName;
 
         $this->io->write(sprintf('<info>Package Name: <comment>%s</comment></info>', $packageName));
         $this->io->write(sprintf('<info>Destination: <comment>%s</comment></info>', $buildDir));
         $this->io->write('<comment>-----------------------------------</comment>');
 
-        if (file_exists($buildDir . DIRECTORY_SEPARATOR . $packageName)) {
-            unlink($buildDir . DIRECTORY_SEPARATOR . $packageName);
+        if ($this->filesystem->exists($packageFullPath)) {
+            throw new \InvalidArgumentException(sprintf('Unable to generate package to %s : a package with this name allready exist in this folder.', $buildDir));
         }
 
         $this->eventDispatcher->dispatch(Event::EVENT_PRE_PACKAGE);
 
         $archive = new \ZipArchive();
-        $archive->open($buildDir . DIRECTORY_SEPARATOR . $packageName, \ZipArchive::CREATE);
+        $archive->open($packageFullPath, \ZipArchive::CREATE);
 
         if (null !== $this->config->get('vendor-dir')) {
             // Add vendor
@@ -180,7 +191,7 @@ class Packager
         foreach ($this->files as $name => $file) {
             $archive->addFile($file, $name);
         }
-        //$phar->buildFromIterator(new \ArrayIterator($this->files));
+
         $this->io->overwrite('<info>Build Package... <comment>Done</comment></info>');
 
         // Add Manifest
@@ -190,7 +201,7 @@ class Packager
 
         $archive->close();
 
-        return $buildDir . DIRECTORY_SEPARATOR . $packageName;
+        return $packageFullPath;
     }
 
     protected function detectVendors($vendorPath = 'vendor/')
