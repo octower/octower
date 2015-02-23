@@ -11,7 +11,6 @@
 
 namespace Octower;
 
-
 use Octower\Deploy\SharedGenerator\GeneratorInterface;
 use Octower\IO\IOInterface;
 use Octower\Json\JsonFile;
@@ -24,6 +23,10 @@ use Octower\Util\ProcessExecutor;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Yaml\Parser;
 
+/**
+ * Class Deployer
+ * @package Octower
+ */
 class Deployer
 {
 
@@ -58,6 +61,12 @@ class Deployer
 
     protected $generatorsInstance;
 
+    /**
+     * @param IOInterface $io
+     * @param Config $config
+     * @param Project $project
+     * @param ProcessExecutor $process
+     */
     public function __construct(IOInterface $io, Config $config, Project $project = null, ProcessExecutor $process = null)
     {
         $this->io                 = $io;
@@ -99,6 +108,22 @@ class Deployer
         );
     }
 
+    /**
+     * Launch remote support check for local environment (example : lib ssh2 for ssh remote)
+     *
+     * @param RemoteInterface $remote
+     */
+    public function checkRemoteSupported(RemoteInterface $remote)
+    {
+        $remote->supported();
+    }
+
+    /**
+     * Deploy package
+     *
+     * @param RemoteInterface $remote
+     * @param $package
+     */
     public function deploy(RemoteInterface $remote, $package)
     {
         $remote->supported();
