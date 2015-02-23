@@ -24,9 +24,20 @@ class PackageCommand extends Command
         $this
             ->setName('package:generate')
             ->setDescription('Create package to deploy')
-            ->addOption('force-version', 'fv', InputOption::VALUE_REQUIRED)
+            ->addOption('force-version', 'fv', InputOption::VALUE_REQUIRED, 'Force the generate package version')
+            ->addOption('release-dir', 'r', InputOption::VALUE_REQUIRED, 'Specify where to store generate package. If omitted, the package will be generated in current working directory.')
             ->setHelp(<<<EOT
-<info>php octower.phar package:generate</info>
+<info>%command.name%</info> create an octower package for the current version.
+
+  <info>%command.full_name%</info>
+
+To change the folder where the release package will be generated use the <info>--release-dir</info> option:
+
+  <info>%command.full_name% --release-dir=releases/</info>
+
+To force the generated package to use a specific version (and not an auto-generated one) use the <info>--force-version</info> option:
+
+  <info>%command.full_name% --force-version=v1.0-alpha</info>
 EOT
             );
     }
@@ -44,6 +55,6 @@ EOT
         }
 
         $packager = Packager::create($io, $octower);
-        $packager->run();
+        $packager->run($input->getOption('release-dir'));
     }
 }
