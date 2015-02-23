@@ -48,9 +48,6 @@ EOT
         }
 
 
-        /** @var Project $project */
-        $project = $octower->getContext();
-        $remote = $project->getRemote($input->getArgument('remote'));
 
         if (!$input->getOption('generate') && strlen($input->getArgument('package')) == 0) {
             throw new InvalidArgumentException('No package provided and no --generate flag used.');
@@ -59,6 +56,12 @@ EOT
         if ($input->getOption('generate') && strlen($input->getArgument('package')) > 0) {
             throw new InvalidArgumentException('Both package and --generate flag provided. Unable to determine strategy.');
         }
+
+        /** @var Project $project */
+        $project = $octower->getContext();
+        $remote = $project->getRemote($input->getArgument('remote'));
+        $deployer = Deployer::create($this->getIO(), $this->getOctower());
+        $deployer->checkRemoteSupported($remote);
 
         if ($input->getOption('generate')) {
             if ($input->getOption('force-version')) {
@@ -79,7 +82,6 @@ EOT
         // Contact the server
         $remote->override(json_decode($input->getOption('override'), true));
 
-        $deployer = Deployer::create($this->getIO(), $this->getOctower());
         $deployer->deploy($remote, $packagePath);
 
 
