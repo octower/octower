@@ -78,8 +78,8 @@ class Packager
         /** @var \Phar $phar */
         $archive = new \ZipArchive();
         $archive->open($package);
-
-        $metadata = JsonFile::parseJson($archive->getArchiveComment());
+        
+        $metadata = JsonFile::parseJson(@$archive->getArchiveComment());
 
         if (!$metadata || !isset($metadata['version'])) {
             throw new \Exception('Invalid package metadata');
