@@ -16,6 +16,8 @@ use Octower\Metadata\Project;
 
 interface RemoteInterface {
 
+    public function getName();
+
     public function supported();
 
     public function isServerValid(IOInterface $io);

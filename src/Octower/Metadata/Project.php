@@ -106,6 +106,14 @@ class Project extends Context
     }
 
     /**
+     * @return array
+     */
+    public function getRemotes()
+    {
+        return $this->remotes;
+    }
+
+    /**
      * @param $name
      *
      * @return RemoteInterface

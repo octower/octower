@@ -39,6 +39,11 @@ class LocalRemote implements RemoteInterface
         $this->filesystem = new Filesystem();
     }
 
+    public function getName()
+    {
+        return sprintf('local - %s', $this->path);
+    }
+
     public function supported()
     {
     }
