@@ -223,6 +223,7 @@ class Application extends BaseApplication
             $commands[] = new Command\DeployCommand();
             $commands[] = new Command\ReleaseListCommand();
             $commands[] = new Command\ReleaseEnableCommand();
+            $commands[] = new Command\RemoteListCommand();
             $commands[] = new Command\TestCommand();
         }
 
