@@ -48,9 +48,17 @@ EOT
         }
 
 
-        /** @var Project $project */
-        $project = $octower->getContext();
-        $remote = $project->getRemote($input->getArgument('remote'));
+        $overrideOption = $input->getOption('override', null);
+        $override = null;
+
+        if (!empty($overrideOption)) {
+            $override = json_decode($overrideOption, true);
+
+            if (!$override) {
+                // Something went wrong in Json
+                throw new InvalidArgumentException(sprintf('Invalid JSON on the "override" option - %s', json_last_error_msg()));
+            }
+        }
 
         if (!$input->getOption('generate') && strlen($input->getArgument('package')) == 0) {
             throw new InvalidArgumentException('No package provided and no --generate flag used.');
@@ -59,6 +67,12 @@ EOT
         if ($input->getOption('generate') && strlen($input->getArgument('package')) > 0) {
             throw new InvalidArgumentException('Both package and --generate flag provided. Unable to determine strategy.');
         }
+
+        /** @var Project $project */
+        $project = $octower->getContext();
+        $remote = $project->getRemote($input->getArgument('remote'));
+        $deployer = Deployer::create($this->getIO(), $this->getOctower());
+        $deployer->checkRemoteSupported($remote);
 
         if ($input->getOption('generate')) {
             if ($input->getOption('force-version')) {
@@ -77,9 +91,11 @@ EOT
         }
 
         // Contact the server
-        $remote->override(json_decode($input->getOption('override'), true));
+        if ($override) {
+            $remote->override($override);
+        }
 
-        $deployer = Deployer::create($this->getIO(), $this->getOctower());
+
         $deployer->deploy($remote, $packagePath);
 
 

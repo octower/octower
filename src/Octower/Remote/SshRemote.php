@@ -11,7 +11,6 @@
 
 namespace Octower\Remote;
 
-
 use Octower\IO\IOInterface;
 use Octower\Json\JsonFile;
 use Octower\Metadata\Project;
@@ -147,65 +146,126 @@ class SshRemote implements RemoteInterface
 
         $io->write(sprintf('Connecting to %s (port: %s)', $this->config['hostname'], $this->getPort()));
 
+        $username = null;
+        $authmode = null;
+        $privateKeyFile = null;
+        $publicKeyFile = null;
+        $password = null;
+
         $tryCount = 0;
         do {
             $tryCount++;
 
             if ($tryCount > 1) {
                 $io->write('<error>Unable to login on the server.</error>');
-            }
 
-            if ($tryCount > 3) {
-                $io->write('<error>3 failed login. Abort.</error>');
+                if ($tryCount > 3) {
+                    $io->write('<error>3 failed login. Abort.</error>');
 
-                return;
-            }
-
-            $username = $io->ask('    <info>Username to connect with?</info> ');
-
-
-            $io->write(array(
-                '    <comment>Authentification mode:</comment>',
-                '        k - public key',
-                '        p - password',
-                '        ? - print help'
-            ));
-
-            while (true) {
-                switch ($io->ask('    <info>Your choice [k,p,?]?</info> ', '?')) {
-                    case 'k':
-                        $userHome = realpath($_SERVER['HOME'] . '/.ssh/id_rsa');
-                        do {
-                            $privateKeyFile = $io->ask(sprintf('    <info>Private key file (%s)?</info> ', $userHome), $userHome);
-                        } while (!file_exists($privateKeyFile));
-
-                        $publicKeyFile = $privateKeyFile . '.pub';
-                        while (!file_exists($publicKeyFile)) {
-                            $publicKeyFile = $io->ask(sprintf('    <info>Public key file (%s not found)?</info> ', $publicKeyFile), '');
-                        }
-
-                        $authentication = new Ssh\Authentication\PublicKeyFile($username, $publicKeyFile, $privateKeyFile);
-                        $this->sshSession = new Ssh\Session($this->sshConfiguration, $authentication);
-                        break 2;
-                    case 'p':
-                        $authentication = new Ssh\Authentication\Password($username, $io->askAndHideAnswer('    <info>Password to connect with?</info> '));
-                        $this->sshSession = new Ssh\Session($this->sshConfiguration, $authentication);
-                        break 2;
-                    case '?':
-                    default:
-                        help:
-                        $io->write(array(
-                            '    k - public key',
-                            '    p - password',
-                        ));
-
-                        $io->write('    ? - print help');
-                        break;
+                    return;
+                }
+                else {
+                    $this->interactAuthInformation($io);
                 }
             }
-        } while (!$this->sshSession->authenticate(false));
+            elseif(!(isset($this->config['username']) && isset($this->config['authmode']) && ((isset($this->config['privateKeyFile']) && isset($this->config['publicKeyFile'])) || isset($this->config['password'])))) {
+                // No preconfig. Ask connexion informations before continue;
+                $this->interactAuthInformation($io);
+            }
+
+            if (isset($this->config['username'])) {
+                $username = $this->config['username'];
+            }
+
+            if (isset($this->config['authmode'])) {
+                $authmode = $this->config['authmode'];
+            }
+
+            if (isset($this->config['privateKeyFile'])) {
+                $privateKeyFile = $this->config['privateKeyFile'];
+            }
+
+            if (isset($this->config['publicKeyFile'])) {
+                $publicKeyFile = $this->config['publicKeyFile'];
+            }
+
+            if (isset($this->config['password'])) {
+                $password = $this->config['password'];
+            }
+
+            $io->write(sprintf('Connecting with %s', $username));
+            switch ($authmode) {
+                case 'public-key':
+                    if (empty($username) || empty($publicKeyFile) || empty($privateKeyFile)) {
+                        break 2;
+                    }
+
+                    $authentication = new Ssh\Authentication\PublicKeyFile($username, $publicKeyFile, $privateKeyFile);
+                    $this->sshSession = new Ssh\Session($this->sshConfiguration, $authentication);
+                    break 2;
+                case 'password':
+                    if (empty($username) || empty($password)) {
+                        break 2;
+                    }
+                    $authentication = new Ssh\Authentication\Password($username, $password);
+                    $this->sshSession = new Ssh\Session($this->sshConfiguration, $authentication);
+                    break 2;
+            }
+        } while (!$this->sshSession || !$this->sshSession->authenticate(false));
 
         $io->write('Connected to the server');
+    }
+
+    protected function interactAuthInformation(IOInterface $io)
+    {
+        $this->config['username'] = $io->ask('    <info>Username to connect with?</info> ');
+
+        $io->write(array(
+            '    <comment>Authentification mode:</comment>',
+            '        k - public key',
+            '        p - password',
+            '        ? - print help'
+        ));
+
+        while (true) {
+            switch ($io->ask('    <info>Your choice [k,p,?]?</info> ', '?')) {
+                case 'k':
+                    $this->config['authmode'] = 'public-key';
+
+                    $userHome = realpath($_SERVER['HOME'] . '/.ssh/id_rsa');
+                    do {
+                        $this->config['privateKeyFile'] = $io->ask(sprintf('    <info>Private key file (:q to change authentication mode) (%s)?</info> ', $userHome), $userHome);
+
+                        if(':q' == $this->config['privateKeyFile']) {
+                            break 2;
+                        }
+                    } while (!file_exists($this->config['privateKeyFile']));
+
+                    $this->config['publicKeyFile'] = $this->config['privateKeyFile'] . '.pub';
+                    while (!file_exists($this->config['publicKeyFile'])) {
+                        $this->config['publicKeyFile'] = $io->ask(sprintf('    <info>Public key file (%s not found) (:q to change authentication mode)?</info> ', $this->config['publicKeyFile']), '');
+
+                        if(':q' == $this->config['publicKeyFile']) {
+                            break 2;
+                        }
+                    }
+                    break 2;
+                case 'p':
+                    $this->config['authmode'] = 'password';
+                    $this->config['password'] = $io->askAndHideAnswer('    <info>Password to connect with?</info> ');
+                    break 2;
+                case '?':
+                default:
+                    help:
+                    $io->write(array(
+                        '    k - public key',
+                        '    p - password',
+                    ));
+
+                    $io->write('    ? - print help');
+                    break;
+            }
+        }
     }
 
     protected function transfert(IOInterface $io, $dest, $source)
