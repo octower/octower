@@ -13,6 +13,7 @@ namespace Octower;
 
 use Octower\Metadata\Context;
 use Octower\Script\EventDispatcher;
+use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * Class Octower
@@ -22,6 +23,8 @@ use Octower\Script\EventDispatcher;
 class Octower
 {
     const VERSION = '@package_version@';
+    const OCTOWER_FOLDER = './.octower';
+    const OCTOWER_FILE = './octower.json';
 
     /**
      * @var Config
@@ -37,6 +40,11 @@ class Octower
      * @var EventDispatcher
      */
     private $eventDispatcher;
+
+    /**
+     * @var string
+     */
+    private $octowerFolder;
 
     /**
      * @param Config $config
@@ -98,5 +106,22 @@ class Octower
         return $this->eventDispatcher;
     }
 
+    /**
+     * @param string $octowerFolder
+     *
+     * @return $this
+     */
+    public function setOctowerFolder($octowerFolder)
+    {
+        $this->octowerFolder = $octowerFolder;
+        return $this;
+    }
 
+    /**
+     * @return string
+     */
+    public function getOctowerFolder()
+    {
+        return $this->octowerFolder;
+    }
 }

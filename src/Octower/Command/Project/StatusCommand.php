@@ -9,16 +9,14 @@
  * file that was distributed with this source code.
  */
 
-namespace Octower\Command;
+namespace Octower\Command\Project;
 
+use Octower\IO\IOInterface;
 use Octower\Metadata\Project;
 use Octower\Octower;
-use Octower\Packager;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
-class StatusCommand extends Command
+class StatusCommand extends ProjectCommand
 {
     protected function configure()
     {
@@ -26,20 +24,15 @@ class StatusCommand extends Command
             ->setName('project:status')
             ->setDescription('Display project status')
             ->setHelp(<<<EOT
-<info>php octower.phar project:project</info>
+<info>%command.name%</info> display project status
+
+  <info>%command.full_name%</info>
 EOT
             );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function doExecute(InputInterface $input, Octower $octower, IOInterface $io)
     {
-        $octower = $this->getOctower();
-        $io      = $this->getIO();
-
-        if (!$octower->getContext() instanceof Project) {
-            throw new \RuntimeException('The current context is not a project context.');
-        }
-
         /** @var Project $project */
         $project = $octower->getContext();
 

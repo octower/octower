@@ -9,15 +9,16 @@
  * file that was distributed with this source code.
  */
 
-namespace Octower\Command;
+namespace Octower\Command\Project;
 
+use Octower\IO\IOInterface;
 use Octower\Metadata\Project;
+use Octower\Octower;
 use Octower\Packager;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
 
-class PackageCommand extends Command
+class PackageCommand extends ProjectCommand
 {
     protected function configure()
     {
@@ -42,11 +43,8 @@ EOT
             );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function doExecute(InputInterface $input, Octower $octower, IOInterface $io)
     {
-        $octower = $this->getOctower();
-        $io = $this->getIO();
-
         if ($input->getOption('force-version')) {
             $context = $octower->getContext();
             if ($context instanceof Project) {

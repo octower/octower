@@ -11,8 +11,6 @@
 
 namespace Octower\Command;
 
-use Octower\Octower;
-use Octower\Packager;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -23,12 +21,14 @@ class TestCommand extends Command
     {
         $this
             ->setName('package:test')
-            ->setDescription('Test package to deploy')
+            ->addArgument('package', InputArgument::REQUIRED)
+            ->setDescription('Test an octower package')
             ->setHelp(<<<EOT
-<info>php octower.phar package:test <package></info>
+<info>%command.name%</info> test an octower package
+
+  <info>%command.full_name% package</info>
 EOT
-            )
-            ->addArgument('package', InputArgument::REQUIRED);
+            );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
