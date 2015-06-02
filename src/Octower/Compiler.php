@@ -15,7 +15,7 @@ use Symfony\Component\Finder\Finder;
 use Symfony\Component\Process\Process;
 
 /**
- * The Compiler class compiles composer into a phar
+ * The Compiler class compiles octower into a phar
  *
  * @author Fabien Potencier <fabien@symfony.com>
  * @author Jordi Boggiano <j.boggiano@seld.be>
@@ -26,7 +26,7 @@ class Compiler
     private $version;
 
     /**
-     * Compiles composer into a single phar file
+     * Compiles octower into a single phar file
      *
      * @throws \RuntimeException
      * @param  string            $pharFile The full path to the file to create
@@ -196,7 +196,7 @@ EOF;
         // add warning once the phar is older than 30 days
         if (preg_match('{^[a-f0-9]+$}', $this->version)) {
             $warningTime = time() + 30*86400;
-            $stub .= "define('COMPOSER_DEV_WARNING_TIME', $warningTime);\n";
+            $stub .= "define('OCTOWER_DEV_WARNING_TIME', $warningTime);\n";
         }
 
         return $stub . <<<'EOF'

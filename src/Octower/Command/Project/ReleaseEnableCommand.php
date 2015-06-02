@@ -35,19 +35,19 @@ EOT
             );
     }
 
-    protected function doExecute(InputInterface $input, Octower $octower, IOInterface $io)
+    protected function doExecute(InputInterface $input)
     {
         /** @var Project $project */
-        $project = $octower->getContext();
+        $project = $this->getOctower()->getContext();
 
         // Contact the server
         /** @var SshRemote $remote */
         $remote = $project->getRemote($input->getArgument('remote'));
-        $remote->isServerValid($io);
+        $remote->isServerValid($this->getIO());
         $remote->execServerCommand(sprintf('server:release:enable %s', $input->getArgument('release')));
 
         $output = $remote->execServerCommand('server:release:list --ansi');
 
-        $io->write(str_replace(array('&lt;', '&gt;'), array('<', '>'), $output));
+        $this->getIO()->write(str_replace(array('&lt;', '&gt;'), array('<', '>'), $output));
     }
 }

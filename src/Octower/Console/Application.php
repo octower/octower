@@ -84,7 +84,7 @@ class Application extends BaseApplication
         $this->io = new ConsoleIO($input, $output, $this->getHelperSet());
 
         if (version_compare(PHP_VERSION, '5.3.2', '<')) {
-            $output->writeln('<warning>Composer only officially supports PHP 5.3.2 and above, you will most likely encounter problems with your PHP ' . PHP_VERSION . ', upgrading is strongly recommended.</warning>');
+            $output->writeln('<warning>Octower only officially supports PHP 5.3.2 and above, you will most likely encounter problems with your PHP ' . PHP_VERSION . ', upgrading is strongly recommended.</warning>');
         }
 
         if (defined('OCTOWER_DEV_WARNING_TIME') && $this->getCommandName($input) !== 'self-update' && $this->getCommandName($input) !== 'selfupdate') {
@@ -215,6 +215,7 @@ class Application extends BaseApplication
         if (!$octower) {
             // out of existing context
             $this->add(new Command\Server\InitializeCommand());
+            $this->add(new Command\Project\InitializeCommand());
 
             return;
         }

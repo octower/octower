@@ -31,16 +31,16 @@ EOT
             );
     }
 
-    protected function doExecute(InputInterface $input, Octower $octower, IOInterface $io)
+    protected function doExecute(InputInterface $input)
     {
         /** @var Project $project */
-        $project = $octower->getContext();
+        $project = $this->getOctower()->getContext();
 
-        $io->write('<info>~~ Project status ~~</info>');
-        $io->write('<info>Project: <comment>' . $project->getName() . '</comment></info>');
-        $io->write('<info>Version: <comment>' . $project->getVersion() . '</comment></info>');
+        $this->getIO()->write('<info>~~ Project status ~~</info>');
+        $this->getIO()->write('<info>Project: <comment>' . $project->getName() . '</comment></info>');
+        $this->getIO()->write('<info>Version: <comment>' . $project->getVersion() . '</comment></info>');
 
-        $io->write('<info>Scripts:</info>');
+        $this->getIO()->write('<info>Scripts:</info>');
 
         foreach(Project::getScriptEvents() as $event) {
             $scripts = $project->getScriptsByPriority($event);
@@ -49,10 +49,10 @@ EOT
                 continue;
             }
 
-            $io->write(sprintf('    - <comment>%s</comment> :', $event));
+            $this->getIO()->write(sprintf('    - <comment>%s</comment> :', $event));
 
             foreach($scripts as $script) {
-                $io->write(sprintf('        - "%s" <notice>(priority : %s)</notice>', $script['command'], $script['priority']));
+                $this->getIO()->write(sprintf('        - "%s" <notice>(priority : %s)</notice>', $script['command'], $script['priority']));
             }
         }
 

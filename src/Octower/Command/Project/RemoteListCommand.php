@@ -32,16 +32,16 @@ EOT
             );
     }
 
-    protected function doExecute(InputInterface $input, Octower $octower, IOInterface $io)
+    protected function doExecute(InputInterface $input)
     {
         /** @var Project $project */
-        $project = $octower->getContext();
+        $project = $this->getOctower()->getContext();
 
-        $io->write('<info>Remote availables:</info>');
+        $this->getIO()->write('<info>Remote availables:</info>');
 
         foreach ($project->getRemotes() as $name => $remote) {
             /** @var RemoteInterface $remote */
-            $io->write(sprintf('    <comment>%s</comment> %s', $name, $remote->getName()));
+            $this->getIO()->write(sprintf('    <comment>%s</comment> %s', $name, $remote->getName()));
         }
     }
 }

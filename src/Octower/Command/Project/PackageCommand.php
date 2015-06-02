@@ -43,16 +43,16 @@ EOT
             );
     }
 
-    protected function doExecute(InputInterface $input, Octower $octower, IOInterface $io)
+    protected function doExecute(InputInterface $input)
     {
         if ($input->getOption('force-version')) {
-            $context = $octower->getContext();
+            $context = $this->getOctower()->getContext();
             if ($context instanceof Project) {
                 $context->setVersion($input->getOption('force-version'));
             }
         }
 
-        $packager = Packager::create($io, $octower);
+        $packager = Packager::create($this->getIO(), $this->getOctower());
         $packager->run($input->getOption('release-dir'));
     }
 }

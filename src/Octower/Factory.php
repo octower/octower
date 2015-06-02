@@ -71,7 +71,7 @@ class Factory
     {
         $filesystem = new Filesystem();
 
-        // load Composer configuration
+        // load Octower configuration
         if (null === $localConfig) {
             $localConfig = static::getOctowerFile();
         }
@@ -81,9 +81,9 @@ class Factory
             $rootPath = basename($localConfig);
             if (!$file->exists()) {
                 if ($localConfig === './octower.json' || $localConfig === 'octower.json') {
-                    $message = 'Composer could not find a octower.json file in ' . getcwd();
+                    $message = 'Octower could not find a octower.json file in ' . getcwd();
                 } else {
-                    $message = 'Composer could not find the config file: ' . $localConfig;
+                    $message = 'Octower could not find the config file: ' . $localConfig;
                 }
                 $instructions = 'To initialize a project, please create a octower.json file as described in the http://getoctower.org/ "Getting Started" section';
                 throw new \InvalidArgumentException($message . PHP_EOL . $instructions);
