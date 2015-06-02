@@ -33,7 +33,7 @@ class Application extends BaseApplication
     protected $octower;
 
     /**
-    * @var IOInterface
+     * @var IOInterface
      */
     protected $io;
 
@@ -84,7 +84,7 @@ class Application extends BaseApplication
         $this->io = new ConsoleIO($input, $output, $this->getHelperSet());
 
         if (version_compare(PHP_VERSION, '5.3.2', '<')) {
-            $output->writeln('<warning>Composer only officially supports PHP 5.3.2 and above, you will most likely encounter problems with your PHP '.PHP_VERSION.', upgrading is strongly recommended.</warning>');
+            $output->writeln('<warning>Composer only officially supports PHP 5.3.2 and above, you will most likely encounter problems with your PHP ' . PHP_VERSION . ', upgrading is strongly recommended.</warning>');
         }
 
         if (defined('OCTOWER_DEV_WARNING_TIME') && $this->getCommandName($input) !== 'self-update' && $this->getCommandName($input) !== 'selfupdate') {
@@ -117,14 +117,14 @@ class Application extends BaseApplication
         }
 
         if (isset($startTime)) {
-            $output->writeln('<info>Memory usage: '.round(memory_get_usage() / 1024 / 1024, 2).'MB (peak: '.round(memory_get_peak_usage() / 1024 / 1024, 2).'MB), time: '.round(microtime(true) - $startTime, 2).'s');
+            $output->writeln('<info>Memory usage: ' . round(memory_get_usage() / 1024 / 1024, 2) . 'MB (peak: ' . round(memory_get_peak_usage() / 1024 / 1024, 2) . 'MB), time: ' . round(microtime(true) - $startTime, 2) . 's');
         }
 
         return $result;
     }
 
     /**
-     * @param  bool                    $required
+     * @param  bool $required
      * @return \Octower\Octower
      */
     public function getOctower($required = true)
@@ -153,14 +153,15 @@ class Application extends BaseApplication
             if ($octower) {
                 $config = $octower->getConfig();
 
-                $minSpaceFree = 1024*1024;
+                $minSpaceFree = 1024 * 1024;
                 if ((($df = @disk_free_space($dir = $config->get('home'))) !== false && $df < $minSpaceFree)
                     || (($df = @disk_free_space($dir = $config->get('vendor-dir'))) !== false && $df < $minSpaceFree)
                 ) {
-                    $output->writeln('<error>The disk hosting '.$dir.' is full, this may be the cause of the following exception</error>');
+                    $output->writeln('<error>The disk hosting ' . $dir . ' is full, this may be the cause of the following exception</error>');
                 }
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         parent::renderException($exception, $output);
     }
@@ -198,6 +199,7 @@ class Application extends BaseApplication
 
         $commands[] = new Command\AboutCommand();
         $commands[] = new Command\SelfUpdateCommand();
+        $commands[] = new Command\TestCommand();
 
         return $commands;
     }
@@ -218,13 +220,12 @@ class Application extends BaseApplication
         }
 
         if ($octower->getContext() instanceof Project) {
-            $commands[] = new Command\StatusCommand();
-            $commands[] = new Command\PackageCommand();
-            $commands[] = new Command\DeployCommand();
-            $commands[] = new Command\ReleaseListCommand();
-            $commands[] = new Command\ReleaseEnableCommand();
-            $commands[] = new Command\RemoteListCommand();
-            $commands[] = new Command\TestCommand();
+            $commands[] = new Command\Project\StatusCommand();
+            $commands[] = new Command\Project\PackageCommand();
+            $commands[] = new Command\Project\DeployCommand();
+            $commands[] = new Command\Project\ReleaseListCommand();
+            $commands[] = new Command\Project\ReleaseEnableCommand();
+            $commands[] = new Command\Project\RemoteListCommand();
         }
 
         if ($octower->getContext() instanceof Server) {

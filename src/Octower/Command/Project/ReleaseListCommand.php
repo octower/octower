@@ -9,38 +9,33 @@
  * file that was distributed with this source code.
  */
 
-namespace Octower\Command;
+namespace Octower\Command\Project;
 
+use Octower\IO\IOInterface;
 use Octower\Metadata\Project;
+use Octower\Octower;
 use Octower\Remote\SshRemote;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
 
-class ReleaseListCommand extends Command
+class ReleaseListCommand extends ProjectCommand
 {
     protected function configure()
     {
         $this
             ->setName('release:list')
-            ->setDescription('Upload package')
+            ->addArgument('remote', InputArgument::REQUIRED)
+            ->setDescription('List releases availables on a remote')
             ->setHelp(<<<EOT
-<info>php octower.phar release:list <remote></info>
+<info>%command.name%</info> list releases availables on a remote.
+
+  <info>%command.full_name% remote</info>
 EOT
-            )
-            ->addArgument('remote', InputArgument::REQUIRED);
+            );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function doExecute(InputInterface $input, Octower $octower, IOInterface $io)
     {
-        $octower = $this->getOctower();
-        $io      = $this->getIO();
-
-        if (!$octower->getContext() instanceof Project) {
-            throw new \RuntimeException('The current context is not a project context.');
-        }
-
         /** @var Project $project */
         $project = $octower->getContext();
 
