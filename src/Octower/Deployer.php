@@ -153,7 +153,7 @@ class Deployer
         $project = $loader->load($projectConfig);
 
         if (file_exists($currentPath) && readlink($currentPath) == $releasePath) {
-            $this->io->write('<warning>This version is allready enabled.</warning>');
+            $this->io->write('<warning>This version is already enabled.</warning>');
 
             return false;
         }
@@ -204,7 +204,7 @@ class Deployer
         if (file_exists($sharedInReleasePath)) {
             if (!is_link($sharedInReleasePath) || readlink($sharedInReleasePath) !== $sharedPath) {
                 // Error file or directory exist
-                throw new \RuntimeException(sprintf('File, directory or other symbolic link allready exist at %s. Remove or move them to proceed to release activation.', $sharedInReleasePath));
+                throw new \RuntimeException(sprintf('File, directory or other symbolic link already exist at %s. Remove or move them to proceed to release activation.', $sharedInReleasePath));
             }
 
             // Link exist and is valid
