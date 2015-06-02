@@ -88,7 +88,7 @@ class Packager
         $releaseTarget = $releaseManager->getReleaseDirectory($metadata['version']);
 
         if ($filesystem->exists($releaseTarget)) {
-            throw new \Exception('Release allready exist on the server');
+            throw new \Exception('Release already exist on the server');
         }
 
         $filesystem->mkdir($releaseTarget);
@@ -168,7 +168,7 @@ class Packager
         $this->io->write('<comment>-----------------------------------</comment>');
 
         if ($this->filesystem->exists($packageFullPath)) {
-            throw new \InvalidArgumentException(sprintf('Unable to generate package to %s : a package with this name allready exist in this folder.', $buildDir));
+            throw new \InvalidArgumentException(sprintf('Unable to generate package to %s : a package with this name already exist in this folder.', $buildDir));
         }
 
         $this->eventDispatcher->dispatch(Event::EVENT_PRE_PACKAGE);
