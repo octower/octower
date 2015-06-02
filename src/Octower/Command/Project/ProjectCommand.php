@@ -17,13 +17,14 @@ use Octower\Metadata\Project;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-abstract class ProjectCommand  extends Command
+abstract class ProjectCommand extends Command
 {
     public final function execute(InputInterface $input, OutputInterface $output)
     {
         $this->checkProjectContext();
 
-        return $this->doExecute($input, $this->getOctower(), $this->getIO());
+
+        return $this->doExecute($input);
     }
 
     /**
@@ -41,7 +42,7 @@ abstract class ProjectCommand  extends Command
      *
      * @see    setCode()
      */
-    protected function doExecute(InputInterface $input, IOInterface $io)
+    protected function doExecute(InputInterface $input)
     {
         throw new \LogicException('You must override the doExecute() method in the concrete command class.');
     }

@@ -46,7 +46,7 @@ EOT
 
     }
 
-    protected function doExecute(InputInterface $input, Octower $octower, IOInterface $io)
+    protected function doExecute(InputInterface $input)
     {
         $overrideOption = $input->getOption('override', null);
         $override = null;
@@ -69,7 +69,7 @@ EOT
         }
 
         /** @var Project $project */
-        $project = $octower->getContext();
+        $project = $this->getOctower()->getContext();
         $remote = $project->getRemote($input->getArgument('remote'));
         $deployer = Deployer::create($this->getIO(), $this->getOctower());
         $deployer->checkRemoteSupported($remote);
@@ -79,7 +79,7 @@ EOT
                 $project->setVersion($input->getOption('force-version'));
             }
 
-            $packager    = Packager::create($io, $octower);
+            $packager    = Packager::create($this->getIO(), $this->getOctower());
             $packagePath = $packager->run(rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR), uniqid('octower-package'));
 
         } else {
