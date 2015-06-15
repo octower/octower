@@ -9,45 +9,45 @@
  * file that was distributed with this source code.
  */
 
-namespace Octower\Command;
+namespace Octower\Command\Project;
 
 use Octower\Deployer;
+use Octower\IO\IOInterface;
 use Octower\Metadata\Project;
+use Octower\Octower;
 use Octower\Packager;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Exception\InvalidArgumentException;
 
-class DeployCommand extends Command
+class DeployCommand extends ProjectCommand
 {
     protected function configure()
     {
         $this
             ->setName('deploy')
+            ->addArgument('remote', InputArgument::REQUIRED, 'The remote we deploy to')
+            ->addArgument('package', InputArgument::OPTIONAL, 'The package file to deploy')
+            ->addOption('force-version', 'fv', InputOption::VALUE_REQUIRED, 'Force the generate package version')
+            ->addOption('generate', 'g', InputOption::VALUE_NONE, 'Force new package generation before deploy')
+            ->addOption('override', 'o', InputOption::VALUE_OPTIONAL, 'Override remote configuration')
             ->setDescription('Upload package')
             ->setHelp(<<<EOT
-<info>php octower.phar deploy <remote> [<package>|--generate]</info>
+<info>%command.name%</info> deploy an octower package (or a generated one) for the current version to a specified <info>remote</info>
+
+  <info>%command.full_name% remote [package|--generate]</info>
+
+To force the generated package to use a specific version (and not an auto-generated one) use the <info>--force-version</info> option:
+
+  <info>%command.full_name% remote [package|--generate] --force-version=v1.0-alpha</info>
 EOT
-            )
-            ->addArgument('remote', InputArgument::REQUIRED)
-            ->addArgument('package', InputArgument::OPTIONAL)
-            ->addOption('force-version', 'fv', InputOption::VALUE_REQUIRED)
-            ->addOption('generate', 'g', InputOption::VALUE_NONE)
-            ->addOption('override', 'o', InputOption::VALUE_OPTIONAL, 'Override remote information for connecting');
+            );
+
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function doExecute(InputInterface $input)
     {
-        $octower = $this->getOctower();
-        $io      = $this->getIO();
-
-        if (!$octower->getContext() instanceof Project) {
-            throw new \RuntimeException('The current context is not a project context.');
-        }
-
-
         $overrideOption = $input->getOption('override', null);
         $override = null;
 
@@ -69,7 +69,7 @@ EOT
         }
 
         /** @var Project $project */
-        $project = $octower->getContext();
+        $project = $this->getOctower()->getContext();
         $remote = $project->getRemote($input->getArgument('remote'));
         $deployer = Deployer::create($this->getIO(), $this->getOctower());
         $deployer->checkRemoteSupported($remote);
@@ -79,7 +79,7 @@ EOT
                 $project->setVersion($input->getOption('force-version'));
             }
 
-            $packager    = Packager::create($io, $octower);
+            $packager    = Packager::create($this->getIO(), $this->getOctower());
             $packagePath = $packager->run(rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR), uniqid('octower-package'));
 
         } else {
@@ -90,14 +90,14 @@ EOT
             $packagePath = realpath(trim($input->getArgument('package')));
         }
 
-        // Contact the server
+
         if ($override) {
+            // override remote configuration
             $remote->override($override);
         }
 
-
+        // Deploy
         $deployer->deploy($remote, $packagePath);
-
 
         if ($input->getOption('generate')) {
             unlink($packagePath);

@@ -26,7 +26,9 @@ class InfoCommand extends ServerCommand
             ->setName('server:info')
             ->setDescription('Info on the octower server')
             ->setHelp(<<<EOT
-<info>php octower.phar server:info</info>
+<info>%command.name%</info> display info on the octower server
+
+  <info>%command.full_name%</info>
 EOT
             );
     }

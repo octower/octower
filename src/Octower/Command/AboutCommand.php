@@ -11,7 +11,6 @@
 
 namespace Octower\Command;
 
-
 use Octower\Octower;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -24,7 +23,9 @@ class AboutCommand extends Command
             ->setName('about')
             ->setDescription('Short information about Octower')
             ->setHelp(<<<EOT
-<info>php octower.phar about</info>
+<info>%command.name%</info> short information about Octower
+
+  <info>%command.full_name%</info>
 EOT
             );
     }
@@ -35,6 +36,7 @@ EOT
         $output->writeln(<<<EOT
 <info>Octower <comment>{$version}</comment> - PHP Deployment manager</info>
 <comment>Octower is an octopus.</comment>
+<notice>http://getoctower.org</notice>
 EOT
         );
 

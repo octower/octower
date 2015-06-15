@@ -45,7 +45,7 @@ abstract class Command extends BaseCommand
             } elseif ($required) {
                 throw new \RuntimeException(
                     'Could not create a Octower\Octower instance, you must inject ' .
-                    'one if this command is not used with a Composer\Console\Application instance'
+                    'one if this command is not used with a Octower\Console\Application instance'
                 );
             }
         }

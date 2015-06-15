@@ -5,6 +5,10 @@
  *
  * (c) William Pottier <developer@william-pottier.fr>
  *
+ * Based on work for Composer of :
+ * (c) Nils Adermann <naderman@naderman.de>
+ *     Jordi Boggiano <j.boggiano@seld.be>
+ *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
@@ -20,11 +24,6 @@ use Symfony\Component\Process\ProcessBuilder;
 
 /**
  * The Event Dispatcher.
- *
- * Example in command:
- *     $dispatcher = new EventDispatcher($this->getComposer(), $this->getApplication()->getIO());
- *     // ...
- *     $dispatcher->dispatch(ScriptEvents::POST_INSTALL_CMD);
  *     // ...
  *
  * @author François Pluchino <francois.pluchino@opendisplay.com>
@@ -40,7 +39,7 @@ class EventDispatcher
     /**
      * Constructor.
      *
-     * @param Octower         $octower  The composer instance
+     * @param Octower         $octower  The octower instance
      * @param IOInterface     $io       The IOInterface instance
      * @param ProcessExecutor $process
      */

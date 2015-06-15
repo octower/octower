@@ -11,10 +11,10 @@
 
 namespace Octower;
 
-use Octower\Config\JsonConfigSource;
 use Octower\IO\IOInterface;
 use Octower\Json\JsonFile;
 use Octower\Script\EventDispatcher;
+use Octower\Util\Filesystem;
 use Octower\Util\ProcessExecutor;
 use Octower\Util\RemoteFilesystem;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
@@ -22,8 +22,8 @@ use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 class Factory
 {
     /**
-     * @param IOInterface $io      IO instance
-     * @param mixed       $config  either a configuration array or a filename to read from, if null it will read from
+     * @param IOInterface $io IO instance
+     * @param mixed $config either a configuration array or a filename to read from, if null it will read from
      *                             the default filename
      *
      * @return Octower
@@ -38,7 +38,12 @@ class Factory
 
     public static function getOctowerFile()
     {
-        return trim(getenv('OCTOWER')) ?: './octower.json';
+        return trim(getenv('OCTOWER')) ?: Octower::OCTOWER_FILE;
+    }
+
+    public static function getOctowerFolder()
+    {
+        return trim(getenv('OCTOWER_FOLDER')) ?: Octower::OCTOWER_FOLDER;
     }
 
     /**
@@ -54,7 +59,7 @@ class Factory
     /**
      * Creates a Octower instance
      *
-     * @param IOInterface       $io          IO instance
+     * @param IOInterface $io IO instance
      * @param array|string|null $localConfig either a configuration array or a filename to read from, if null it will
      *                                       read from the default filename
      *
@@ -64,7 +69,9 @@ class Factory
      */
     public function createOctower(IOInterface $io, $localConfig = null)
     {
-        // load Composer configuration
+        $filesystem = new Filesystem();
+
+        // load Octower configuration
         if (null === $localConfig) {
             $localConfig = static::getOctowerFile();
         }
@@ -74,12 +81,12 @@ class Factory
             $rootPath = basename($localConfig);
             if (!$file->exists()) {
                 if ($localConfig === './octower.json' || $localConfig === 'octower.json') {
-                    $message = 'Composer could not find a octower.json file in '.getcwd();
+                    $message = 'Octower could not find a octower.json file in ' . getcwd();
                 } else {
-                    $message = 'Composer could not find the config file: '.$localConfig;
+                    $message = 'Octower could not find the config file: ' . $localConfig;
                 }
                 $instructions = 'To initialize a project, please create a octower.json file as described in the http://getoctower.org/ "Getting Started" section';
-                throw new \InvalidArgumentException($message.PHP_EOL.$instructions);
+                throw new \InvalidArgumentException($message . PHP_EOL . $instructions);
             }
 
             $file->validateSchema(JsonFile::LAX_SCHEMA);
@@ -92,19 +99,22 @@ class Factory
         $config->merge($localConfig);
         $io->loadConfiguration($config);
 
+        // Prepare octower folder
+        $this->checkOctowerFolder($filesystem);
+
         // setup process timeout
-        ProcessExecutor::setTimeout((int) $config->get('process-timeout'));
+        ProcessExecutor::setTimeout((int)$config->get('process-timeout'));
 
         // Load package metadata
-        $loader  = new Metadata\Loader\RootLoader($config, new ProcessExecutor($io));
+        $loader = new Metadata\Loader\RootLoader($config, new ProcessExecutor($io));
         $context = $loader->load($localConfig);
-
 
         // initialize octower
         $octower = new Octower();
         $octower
             ->setConfig($config)
-            ->setContext($context);
+            ->setContext($context)
+            ->setOctowerFolder($filesystem->normalizePath($this->getOctowerFolder() . DIRECTORY_SEPARATOR));
 
         // initialize event dispatcher
         $dispatcher = new EventDispatcher($octower, $io);
@@ -117,8 +127,16 @@ class Factory
     {
         return array(
             'highlight' => new OutputFormatterStyle('red'),
-            'warning'   => new OutputFormatterStyle('black', 'yellow'),
-            'notice'    => new OutputFormatterStyle('cyan')
+            'warning' => new OutputFormatterStyle('black', 'yellow'),
+            'notice' => new OutputFormatterStyle('cyan')
         );
+    }
+
+    protected function checkOctowerFolder(Filesystem $filesystem)
+    {
+        // Prepare octower folder
+        if (!$filesystem->exists($this->getOctowerFolder())) {
+            $filesystem->mkdir($this->getOctowerFolder());
+        }
     }
 }

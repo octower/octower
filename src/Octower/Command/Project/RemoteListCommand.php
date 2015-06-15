@@ -9,14 +9,15 @@
  * file that was distributed with this source code.
  */
 
-namespace Octower\Command;
+namespace Octower\Command\Project;
 
+use Octower\IO\IOInterface;
 use Octower\Metadata\Project;
+use Octower\Octower;
 use Octower\Remote\RemoteInterface;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
-class RemoteListCommand extends Command
+class RemoteListCommand extends ProjectCommand
 {
     protected function configure()
     {
@@ -24,26 +25,23 @@ class RemoteListCommand extends Command
             ->setName('remote:list')
             ->setDescription('List defined remotes')
             ->setHelp(<<<EOT
-<info>%command.name%</info> List defined remotes in your octower.json file
+<info>%command.name%</info> list defined remotes in your octower.json file
 
   <info>%command.full_name%</info>
 EOT
             );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function doExecute(InputInterface $input)
     {
-        $octower = $this->getOctower();
-        $io = $this->getIO();
-
         /** @var Project $project */
-        $project = $octower->getContext();
+        $project = $this->getOctower()->getContext();
 
-        $io->write('<info>Remote availables:</info>');
+        $this->getIO()->write('<info>Remote availables:</info>');
 
         foreach ($project->getRemotes() as $name => $remote) {
             /** @var RemoteInterface $remote */
-            $io->write(sprintf('    <comment>%s</comment> %s', $name, $remote->getName()));
+            $this->getIO()->write(sprintf('    <comment>%s</comment> %s', $name, $remote->getName()));
         }
     }
 }
