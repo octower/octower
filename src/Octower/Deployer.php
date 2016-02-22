@@ -136,6 +136,17 @@ class Deployer
 
     public function enableLocal(Octower $octower, IOInterface $io, $release)
     {
+        if ($release === 'LATEST') {
+            $releaseManager = new ReleaseManager($io, $octower);
+            $releases = $releaseManager->all();
+
+            if (count($releases) == 0) {
+                throw new \Exception('No Release available');
+            }
+
+            $release = array_pop($releases)->getVersion();
+        }
+
         $releasePath   = getcwd() . DIRECTORY_SEPARATOR . 'releases' . DIRECTORY_SEPARATOR . $release;
         $sharedBaseDir = getcwd() . DIRECTORY_SEPARATOR . 'shared';
         $currentPath   = getcwd() . DIRECTORY_SEPARATOR . 'current';
