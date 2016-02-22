@@ -26,6 +26,7 @@ class PackageCommand extends ProjectCommand
             ->setName('package:generate')
             ->setDescription('Create package to deploy')
             ->addOption('force-version', 'fv', InputOption::VALUE_REQUIRED, 'Force the generate package version')
+            ->addOption('name', 'n', InputOption::VALUE_REQUIRED, 'Force the name of the package')
             ->addOption('release-dir', 'r', InputOption::VALUE_REQUIRED, 'Specify where to store generate package. If omitted, the package will be generated in current working directory.')
             ->setHelp(<<<EOT
 <info>%command.name%</info> create an octower package for the current version.
@@ -53,6 +54,6 @@ EOT
         }
 
         $packager = Packager::create($this->getIO(), $this->getOctower());
-        $packager->run($input->getOption('release-dir'));
+        $packager->run($input->getOption('release-dir'), $input->getOption('name'));
     }
 }
