@@ -206,7 +206,7 @@ class Sftp extends Subsystem
      */
     public function getUrl($filename)
     {
-        return sprintf('ssh2.sftp://%s/%s', $this->getResource(), $filename);
+        return sprintf('ssh2.sftp://%s/%s', intval($this->getResource()), ltrim($filename, '/'));
     }
 
     /**
