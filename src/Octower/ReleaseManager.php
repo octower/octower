@@ -134,7 +134,7 @@ class ReleaseManager
         return $currentMetadata;
     }
 
-    public function clean()
+    public function clean($force = false)
     {
         $maxNumberRelease = $this->config->get('max-number-release');
         $releases = $this->all();
@@ -172,7 +172,7 @@ class ReleaseManager
             $this->io->write(sprintf('    <comment>%s</comment> %s', $releases[$i]->getVersion(), $releases[$i]->getDirectory()));
         }
 
-        if(!$this->io->askConfirmation('<warning>Are you sure? (y/N)</warning> ', false)) {
+        if(!$force && !$this->io->askConfirmation('<warning>Are you sure? (y/N)</warning> ', false)) {
             $this->io->write('Aborting');
             return;
         }

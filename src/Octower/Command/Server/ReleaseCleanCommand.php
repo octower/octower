@@ -18,6 +18,7 @@ use Octower\Packager;
 use Octower\ReleaseManager;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
@@ -29,6 +30,7 @@ class ReleaseCleanCommand extends ServerCommand
         $this
             ->setName('server:release:clean')
             ->setDescription('Clean release available on the server')
+            ->addOption('force', null, InputOption::VALUE_NONE, 'force the cleaning old release (don\'t ask user for confirmation)')
             ->setHelp(<<<EOT
 <info>%command.full_name%</info>
 EOT
@@ -43,6 +45,6 @@ EOT
         $io      = $this->getIO();
         $releaseManager = new ReleaseManager($io, $octower);
 
-        $releaseManager->clean();
+        $releaseManager->clean($input->getOption('force'));
     }
 }
