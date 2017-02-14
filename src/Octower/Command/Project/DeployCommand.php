@@ -56,7 +56,7 @@ EOT
 
             if (!$override) {
                 // Something went wrong in Json
-                throw new InvalidArgumentException(sprintf('Invalid JSON on the "override" option - %s', json_last_error_msg()));
+                throw new InvalidArgumentException(sprintf('Invalid JSON on the "override" option - %s', function_exists('json_last_error_msg') ? json_last_error_msg() : ''));
             }
         }
 
