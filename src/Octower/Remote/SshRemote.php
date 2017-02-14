@@ -106,7 +106,7 @@ class SshRemote implements RemoteInterface
     {
         $this->connect($io);
 
-        $this->transfert($io, $dest, $source);
+        $this->transfer($io, $dest, $source);
 
         $io->write('<info>Extracting package on server...</info>', false);
 
@@ -164,7 +164,14 @@ class SshRemote implements RemoteInterface
                 return;
             }
 
-            $username = $io->ask('    <info>Username to connect with?</info> ');
+            $username = null;
+            if (!$username && isset($this->config['username'])) {
+                $username = $this->config['username'];
+            }
+
+            if (is_null($username) || $tryCount > 1) {
+                $username = $io->ask('    <info>Username to connect with?</info> ', $username);
+            }
 
 
             $io->write(array(
@@ -211,13 +218,23 @@ class SshRemote implements RemoteInterface
         $io->write('Connected to the server');
     }
 
-    protected function transfert(IOInterface $io, $dest, $source)
+    protected function transfer(IOInterface $io, $dest, $source)
+    {
+        if ($this->transferSftp($io, $dest, $source) !== false) {
+            // transfer complete
+            return;
+        }
+
+        throw new \Exception('Unable to upload release to the server');
+    }
+
+    protected function transferSftp(IOInterface $io, $dest, $source)
     {
         $io->write('<info>Upload package on server... <comment>0%</comment></info>', false);
 
         // open the remote file
-        if (($remoteFp = @fopen($this->sshSession->getSftp()->getUrl($dest), 'w')) === false) {
-            throw new \Exception(sprintf('Could not open remote file: %s', $dest));
+        if (($remoteFp = fopen($this->sshSession->getSftp()->getUrl($dest), 'w+')) === false) {
+            return false;
         }
 
         // open the local file
@@ -233,11 +250,11 @@ class SshRemote implements RemoteInterface
 
         // send file's content
         while (!feof($fp)) {
-            $chunk = fread($fp, 8192);
+            $chunk = fread($fp, 32768);
             fwrite($remoteFp, $chunk);
 
             // Update progression
-            $currentPos = ftell($fp);
+            $currentPos = $previousPos + 32768;
             $tick = microtime(true);
 
             $progression = ($currentPos / $filesize) * 100;
@@ -250,6 +267,8 @@ class SshRemote implements RemoteInterface
         }
 
         $io->overwrite(sprintf('<info>Upload package on server... <comment>Done</comment></info> - Total time: %s', self::secondToDisplay(microtime(true) - $start)));
+
+        return true;
     }
 
     protected function execSshInPath($cmd, IOInterface $io = null)
@@ -259,6 +278,11 @@ class SshRemote implements RemoteInterface
         }
 
         return $this->sshSession->getExec()->run(sprintf('cd %s && %s', $this->config['path'], $cmd));
+    }
+
+    protected function getPort()
+    {
+        return isset($this->config['port']) ? $this->config['port'] : 22;
     }
 
     protected static function secondToDisplay($time)
@@ -279,10 +303,5 @@ class SshRemote implements RemoteInterface
         $texte[] = sprintf('%s seconds', round($temp));
 
         return join(' ', $texte);
-    }
-
-    protected function getPort()
-    {
-        return isset($this->config['port']) ? $this->config['port'] : 22;
     }
 }
