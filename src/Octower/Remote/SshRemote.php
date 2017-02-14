@@ -125,7 +125,9 @@ class SshRemote implements RemoteInterface
         try {
             $outputJson = JsonFile::parseJson($output);
 
-            $io->write($outputJson['output']);
+            if ($io) {
+                $io->write($outputJson['output']);
+            }
 
             if ($outputJson['statusCode'] != 0) {
                 throw new \RuntimeException($outputJson['exception']);
